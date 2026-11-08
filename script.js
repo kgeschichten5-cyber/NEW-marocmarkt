@@ -149,6 +149,9 @@ const logoutButton = document.getElementById('logoutButton');
 const authDialog = document.getElementById('authDialog');
 const authForm = document.getElementById('authForm');
 const authNameField = document.getElementById('authNameField');
+const authAddressField = document.getElementById('authAddressField');
+const authPhoneField = document.getElementById('authPhoneField');
+const authOtpField = document.getElementById('authOtpField');
 const authError = document.getElementById('authError');
 const accountDialog = document.getElementById('accountDialog');
 const accountContent = document.getElementById('accountContent');
@@ -157,15 +160,37 @@ const chatForm = document.getElementById('chatForm');
 const chatMessages = document.getElementById('chatMessages');
 const chatMessageInput = document.getElementById('chatMessageInput');
 const chatHeading = document.getElementById('chatHeading');
+const adminAccessButton = document.getElementById('adminAccessButton');
+const adminLoginDialog = document.getElementById('adminLoginDialog');
+const adminLoginForm = document.getElementById('adminLoginForm');
+const adminLoginError = document.getElementById('adminLoginError');
+const adminMfaPanel = document.getElementById('adminMfaPanel');
+const adminMfaInstructions = document.getElementById('adminMfaInstructions');
+const adminMfaQr = document.getElementById('adminMfaQr');
+const adminMfaForm = document.getElementById('adminMfaForm');
+const adminSetupForm = document.getElementById('adminSetupForm');
+const adminDashboardDialog = document.getElementById('adminDashboardDialog');
+const adminNotificationList = document.getElementById('adminNotificationList');
+const adminListingList = document.getElementById('adminListingList');
+const adminReportList = document.getElementById('adminReportList');
+const adminAppealList = document.getElementById('adminAppealList');
+const adminAuditList = document.getElementById('adminAuditList');
+const adminManagementSection = document.getElementById('adminManagementSection');
+const adminRoster = document.getElementById('adminRoster');
 let currentUser = null;
 let currentProfile = null;
 let authMode = 'signin';
+let phoneVerificationPendingFor = '';
+let phoneVerificationSending = false;
 let currentEditingListing = null;
 let currentReportListing = null;
 let activeConversation = null;
 let chatRefreshTimer = null;
 let notificationRefreshTimer = null;
 let accountTab = 'listings';
+let adminMfaFactorId = '';
+let adminMfaChallengeId = '';
+let adminRole = '';
 
 function getPrimaryImage(item) {
   if (Array.isArray(item.images) && item.images.length > 0) {
@@ -189,8 +214,21 @@ const translations = {
     authCreateAccount: 'Konto erstellen',
     authHaveAccount: 'Ich habe schon ein Konto',
     accountNameLabel: 'Name',
+    accountAddressLabel: 'Adresse',
+    accountPhoneLabel: 'Telefonnummer (international, z. B. +212…)',
     authEmailLabel: 'E-Mail',
     authPasswordLabel: 'Passwort',
+    phoneOtpLabel: 'SMS-Bestätigungscode',
+    phoneOtpTitle: 'Telefonnummer bestätigen',
+    phoneOtpResend: 'Code erneut senden',
+    phoneOtpVerify: 'Telefon bestätigen',
+    contactSaveButton: 'Daten speichern',
+    phoneOtpSent: 'Wir haben einen Bestätigungscode per SMS gesendet.',
+    phoneOtpVerified: 'Telefonnummer bestätigt. Du kannst jetzt Anzeigen aufgeben.',
+    phoneOtpRequired: 'Bitte gib den SMS-Code ein.',
+    phoneInvalid: 'Bitte gib eine gültige Telefonnummer im internationalen Format ein (z. B. +212…).',
+    contactDetailsRequired: 'Bitte gib deine Adresse und Telefonnummer ein.',
+    phoneVerificationRequired: 'Bestätige deine Telefonnummer per SMS, bevor du Anzeigen aufgibst.',
     forgotPassword: 'Passwort vergessen?',
     resetPasswordSent: 'Wir haben dir einen Link zum Zurücksetzen deines Passworts per E-Mail gesendet.',
     newPasswordLabel: 'Neues Passwort',
@@ -203,6 +241,7 @@ const translations = {
     contactSeller: 'Verkäufer kontaktieren',
     editListing: 'Bearbeiten',
     deleteListing: 'Löschen',
+    adminDeleteListing: 'Als Admin löschen',
     reportButton: 'Anzeige melden',
     messageLabel: 'Nachricht',
     sendMessage: 'Senden',
@@ -334,8 +373,21 @@ const translations = {
     authCreateAccount: 'إنشاء حساب',
     authHaveAccount: 'لدي حساب بالفعل',
     accountNameLabel: 'الاسم',
+    accountAddressLabel: 'العنوان',
+    accountPhoneLabel: 'رقم الهاتف (بالتنسيق الدولي، مثل ‎+212…)',
     authEmailLabel: 'البريد الإلكتروني',
     authPasswordLabel: 'كلمة المرور',
+    phoneOtpLabel: 'رمز التأكيد عبر الرسائل القصيرة',
+    phoneOtpTitle: 'تأكيد رقم الهاتف',
+    phoneOtpResend: 'إعادة إرسال الرمز',
+    phoneOtpVerify: 'تأكيد الهاتف',
+    contactSaveButton: 'حفظ البيانات',
+    phoneOtpSent: 'أرسلنا رمز التأكيد عبر رسالة قصيرة.',
+    phoneOtpVerified: 'تم تأكيد رقم الهاتف. يمكنك الآن نشر الإعلانات.',
+    phoneOtpRequired: 'يرجى إدخال رمز الرسالة القصيرة.',
+    phoneInvalid: 'يرجى إدخال رقم هاتف صالح بالتنسيق الدولي (مثل ‎+212…).',
+    contactDetailsRequired: 'يرجى إدخال عنوانك ورقم هاتفك.',
+    phoneVerificationRequired: 'أكد رقم هاتفك عبر رسالة قصيرة قبل نشر الإعلانات.',
     forgotPassword: 'هل نسيت كلمة المرور؟',
     resetPasswordSent: 'أرسلنا إليك رابطًا لإعادة تعيين كلمة المرور عبر البريد الإلكتروني.',
     newPasswordLabel: 'كلمة المرور الجديدة',
@@ -348,6 +400,7 @@ const translations = {
     contactSeller: 'تواصل مع البائع',
     editListing: 'تعديل',
     deleteListing: 'حذف',
+    adminDeleteListing: 'حذف كمسؤول',
     reportButton: 'الإبلاغ عن الإعلان',
     messageLabel: 'رسالة',
     sendMessage: 'إرسال',
@@ -479,8 +532,21 @@ const translations = {
     authCreateAccount: 'Créer un compte',
     authHaveAccount: 'J’ai déjà un compte',
     accountNameLabel: 'Nom',
+    accountAddressLabel: 'Adresse',
+    accountPhoneLabel: 'Téléphone (format international, ex. +212…)',
     authEmailLabel: 'E-mail',
     authPasswordLabel: 'Mot de passe',
+    phoneOtpLabel: 'Code de confirmation SMS',
+    phoneOtpTitle: 'Confirmer le numéro de téléphone',
+    phoneOtpResend: 'Renvoyer le code',
+    phoneOtpVerify: 'Confirmer le téléphone',
+    contactSaveButton: 'Enregistrer',
+    phoneOtpSent: 'Nous avons envoyé un code de confirmation par SMS.',
+    phoneOtpVerified: 'Numéro confirmé. Vous pouvez maintenant publier des annonces.',
+    phoneOtpRequired: 'Veuillez saisir le code reçu par SMS.',
+    phoneInvalid: 'Veuillez saisir un numéro valide au format international (ex. +212…).',
+    contactDetailsRequired: 'Veuillez saisir votre adresse et votre numéro de téléphone.',
+    phoneVerificationRequired: 'Confirmez votre numéro par SMS avant de publier une annonce.',
     forgotPassword: 'Mot de passe oublié ?',
     resetPasswordSent: 'Nous vous avons envoyé un lien de réinitialisation par e-mail.',
     newPasswordLabel: 'Nouveau mot de passe',
@@ -493,6 +559,7 @@ const translations = {
     contactSeller: 'Contacter le vendeur',
     editListing: 'Modifier',
     deleteListing: 'Supprimer',
+    adminDeleteListing: 'Supprimer (admin)',
     reportButton: 'Signaler l’annonce',
     messageLabel: 'Message',
     sendMessage: 'Envoyer',
@@ -653,6 +720,21 @@ function requireSignedIn() {
   return true;
 }
 
+function requireListingEligibility() {
+  if (!requireSignedIn()) return false;
+  if (!currentProfile?.address?.trim() || !currentProfile?.phone?.trim()) {
+    showNotice(getLanguageDictionary().contactDetailsRequired, 'error');
+    openContactSetup();
+    return false;
+  }
+  if (!hasVerifiedProfilePhone()) {
+    showNotice(getLanguageDictionary().phoneVerificationRequired, 'error');
+    runBackendAction(ensurePhoneVerification);
+    return false;
+  }
+  return true;
+}
+
 function openAuthDialog(mode = 'signin') {
   if (!requireBackend()) return;
   authMode = mode;
@@ -664,17 +746,117 @@ function updateAuthDialog() {
   const dict = getLanguageDictionary();
   const isSignUp = authMode === 'signup';
   const isRecovery = authMode === 'recovery';
+  const isContactSetup = authMode === 'contactSetup';
+  const isPhoneVerification = authMode === 'phoneVerification';
   authNameField.hidden = !isSignUp;
-  document.getElementById('authEmailField').hidden = isRecovery;
+  authAddressField.hidden = !isSignUp && !isContactSetup;
+  authPhoneField.hidden = !isSignUp && !isContactSetup;
+  authOtpField.hidden = !isPhoneVerification;
+  document.getElementById('authEmailField').hidden = isRecovery || isContactSetup || isPhoneVerification;
+  document.getElementById('authPasswordField').hidden = isContactSetup || isPhoneVerification;
   document.getElementById('authPasswordField').querySelector('span').textContent = isRecovery ? dict.newPasswordLabel : dict.authPasswordLabel;
-  document.getElementById('forgotPasswordButton').hidden = isSignUp || isRecovery;
-  document.getElementById('toggleAuthModeButton').hidden = isRecovery;
-  document.querySelector('#authDialog h3').textContent = isRecovery ? dict.newPasswordLabel : isSignUp ? dict.authCreateAccount : dict.loginButton;
-  document.getElementById('authSubmitButton').textContent = isRecovery ? dict.newPasswordLabel : isSignUp ? dict.authCreateAccount : dict.loginButton;
+  document.getElementById('forgotPasswordButton').hidden = isSignUp || isRecovery || isContactSetup || isPhoneVerification;
+  document.getElementById('toggleAuthModeButton').hidden = isRecovery || isContactSetup || isPhoneVerification;
+  document.getElementById('resendPhoneCodeButton').hidden = !isPhoneVerification;
+  document.querySelector('#authDialog h3').textContent = isRecovery
+    ? dict.newPasswordLabel
+    : isPhoneVerification
+      ? dict.phoneOtpTitle
+      : isContactSetup
+        ? dict.accountTitle
+        : isSignUp
+          ? dict.authCreateAccount
+          : dict.loginButton;
+  document.getElementById('authSubmitButton').textContent = isRecovery
+    ? dict.newPasswordLabel
+    : isPhoneVerification
+      ? dict.phoneOtpVerify
+      : isContactSetup
+        ? dict.contactSaveButton
+        : isSignUp
+          ? dict.authCreateAccount
+          : dict.loginButton;
   document.getElementById('toggleAuthModeButton').textContent = isSignUp ? dict.authHaveAccount : dict.authCreateAccount;
   document.getElementById('authPassword').autocomplete = isSignUp || isRecovery ? 'new-password' : 'current-password';
+  document.getElementById('authEmail').required = !isRecovery && !isContactSetup && !isPhoneVerification;
+  document.getElementById('authPassword').required = !isContactSetup && !isPhoneVerification;
+  document.getElementById('authName').required = isSignUp;
+  document.getElementById('authAddress').required = isSignUp || isContactSetup;
+  document.getElementById('authPhone').required = isSignUp || isContactSetup;
+  document.getElementById('authOtp').required = isPhoneVerification;
+  if (!isPhoneVerification) document.getElementById('authOtp').value = '';
   document.getElementById('authPassword').value = '';
   authError.textContent = '';
+}
+
+function openContactSetup() {
+  authMode = 'contactSetup';
+  updateAuthDialog();
+  document.getElementById('authAddress').value = currentProfile?.address || '';
+  document.getElementById('authPhone').value = currentProfile?.phone || '';
+  if (!authDialog.open) authDialog.showModal();
+}
+
+function hasVerifiedProfilePhone() {
+  return Boolean(
+    currentUser?.phone_confirmed_at
+    && currentProfile?.phone
+    && currentUser.phone === currentProfile.phone
+  );
+}
+
+async function sendPhoneVerification(phoneValue, resend = false) {
+  const phone = String(phoneValue || '').trim();
+  if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
+    throw new Error(getLanguageDictionary().phoneInvalid);
+  }
+  if (phoneVerificationSending || (!resend && phoneVerificationPendingFor === phone)) return;
+
+  phoneVerificationSending = true;
+  phoneVerificationPendingFor = phone;
+  authMode = 'phoneVerification';
+  updateAuthDialog();
+  document.getElementById('authPhone').value = phone;
+  if (!authDialog.open) authDialog.showModal();
+  try {
+    const { data, error } = await supabaseClient.auth.updateUser({ phone });
+    if (error) throw error;
+    if (data.user) currentUser = data.user;
+    authError.textContent = getLanguageDictionary().phoneOtpSent;
+    updateAuthUi();
+  } catch (error) {
+    phoneVerificationPendingFor = '';
+    authError.textContent = error.message || String(error);
+    throw error;
+  } finally {
+    phoneVerificationSending = false;
+  }
+}
+
+async function ensurePhoneVerification() {
+  if (!currentUser) return;
+  const address = currentProfile?.address?.trim();
+  const phone = currentProfile?.phone?.trim();
+  if (!address || !phone) {
+    if (authMode !== 'contactSetup' || !authDialog.open) openContactSetup();
+    return;
+  }
+  if (hasVerifiedProfilePhone()) {
+    phoneVerificationPendingFor = '';
+    if (authMode === 'phoneVerification' && authDialog.open) authDialog.close();
+    updateAuthUi();
+    return;
+  }
+  if (phoneVerificationPendingFor === phone) {
+    if (authMode !== 'phoneVerification') {
+      authMode = 'phoneVerification';
+      updateAuthDialog();
+      document.getElementById('authPhone').value = phone;
+    }
+    if (!authDialog.open) authDialog.showModal();
+    return;
+  }
+  await sendPhoneVerification(phone);
 }
 
 function updateAuthUi() {
@@ -688,7 +870,7 @@ function updateAuthUi() {
     unreadMessageCount.hidden = true;
     unreadMessageCount.textContent = '';
   }
-  sellButton.disabled = !supabaseClient || !currentUser;
+  sellButton.disabled = !supabaseClient;
 }
 
 async function updateUnreadMessageCount() {
@@ -792,14 +974,25 @@ async function loadProfile(user) {
   currentUser = user;
   currentProfile = null;
   if (!user || !supabaseClient) {
+    adminRole = '';
+    if (adminDashboardDialog?.open) adminDashboardDialog.close();
+    if (adminLoginDialog?.open) adminLoginDialog.close();
+    adminLoginForm?.reset();
+    adminNotificationList?.replaceChildren();
+    adminListingList?.replaceChildren();
+    adminReportList?.replaceChildren();
+    adminAppealList?.replaceChildren();
+    adminAuditList?.replaceChildren();
+    adminRoster?.replaceChildren();
     favorites.clear();
+    phoneVerificationPendingFor = '';
     updateAuthUi();
     return;
   }
 
   const { data, error } = await supabaseClient
     .from('profiles')
-    .select('display_name, is_admin')
+    .select('display_name, is_admin, address, phone')
     .eq('id', user.id)
     .single();
   if (error) {
@@ -810,13 +1003,16 @@ async function loadProfile(user) {
   await loadFavorites();
   updateAuthUi();
   refreshUnreadMessageCount();
+  await ensurePhoneVerification();
 }
 
 async function initializeBackend() {
+  const isAdminDashboardRoute = new URLSearchParams(window.location.search).get('admin') === '1';
   if (!supabaseClient) {
     updateAuthUi();
     showNotice(getLanguageDictionary().backendNotConfigured);
     document.querySelector('.moderation-section').hidden = true;
+    if (isAdminDashboardRoute) window.location.replace('/admin/');
     return;
   }
 
@@ -838,6 +1034,20 @@ async function initializeBackend() {
   await loadProfile(data.session?.user || null);
   await loadListings();
   await renderComplaintList();
+  if (isAdminDashboardRoute) {
+    if (!data.session) {
+      window.location.replace('/admin/');
+      return;
+    }
+    const { data: role, error: roleError } = await supabaseClient.rpc('get_platform_admin_role');
+    if (roleError || !role) {
+      window.location.replace('/admin/');
+      return;
+    }
+    adminRole = role;
+    await renderAdminDashboard();
+    adminDashboardDialog.showModal();
+  }
   if (!notificationRefreshTimer) {
     notificationRefreshTimer = setInterval(refreshUnreadMessageCount, 10000);
   }
@@ -993,6 +1203,98 @@ async function renderAccountContent() {
   const dict = getLanguageDictionary();
   accountContent.replaceChildren();
 
+  if (accountTab === 'notifications') {
+    const { data: notifications, error } = await supabaseClient
+      .from('user_notifications')
+      .select('id, notification_type, message, created_at, read_at')
+      .eq('recipient_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    if (!notifications?.length) {
+      accountContent.textContent = 'Keine Benachrichtigungen.';
+      return;
+    }
+    notifications.forEach((notification) => {
+      const row = document.createElement('article');
+      row.className = 'account-row';
+      const text = document.createElement('p');
+      text.textContent = `${notification.message} · ${new Date(notification.created_at).toLocaleString()}`;
+      row.appendChild(text);
+      if (!notification.read_at) {
+        const markRead = document.createElement('button');
+        markRead.type = 'button';
+        markRead.className = 'btn btn-secondary small-btn';
+        markRead.textContent = 'Als gelesen markieren';
+        markRead.addEventListener('click', () => runBackendAction(async () => {
+          const { error: updateError } = await supabaseClient
+            .from('user_notifications')
+            .update({ read_at: new Date().toISOString() })
+            .eq('id', notification.id)
+            .eq('recipient_id', currentUser.id);
+          if (updateError) throw updateError;
+          await renderAccountContent();
+        }));
+        row.appendChild(markRead);
+      }
+      accountContent.appendChild(row);
+    });
+    return;
+  }
+
+  if (accountTab === 'appeals') {
+    const [{ data: removedListings, error: listingError }, { data: moderation, error: moderationError }] = await Promise.all([
+      supabaseClient.from('listings').select('id, title').eq('seller_id', currentUser.id).eq('status', 'removed'),
+      supabaseClient.from('user_moderation').select('id, action, reason').eq('user_id', currentUser.id).is('lifted_at', null)
+    ]);
+    if (listingError) throw listingError;
+    if (moderationError) throw moderationError;
+    const form = document.createElement('form');
+    form.className = 'form-grid single-column';
+    const targetLabel = document.createElement('label');
+    targetLabel.textContent = 'Angefochtene Maßnahme';
+    const target = document.createElement('select');
+    target.required = true;
+    target.add(new Option('Bitte auswählen', ''));
+    (removedListings || []).forEach((listing) => target.add(new Option(`Entfernte Anzeige: ${listing.title}`, `listing:${listing.id}`)));
+    (moderation || []).forEach((entry) => target.add(new Option(`Kontomaßnahme: ${entry.action} · ${entry.reason}`, `moderation:${entry.id}`)));
+    targetLabel.appendChild(target);
+    const messageLabel = document.createElement('label');
+    messageLabel.textContent = 'Begründung des Einspruchs';
+    const message = document.createElement('textarea');
+    message.required = true;
+    message.minLength = 10;
+    message.maxLength = 3000;
+    message.rows = 4;
+    messageLabel.appendChild(message);
+    const submit = document.createElement('button');
+    submit.type = 'submit';
+    submit.className = 'btn btn-primary';
+    submit.textContent = 'Einspruch senden';
+    form.append(targetLabel, messageLabel, submit);
+    if (!removedListings?.length && !moderation?.length) {
+      accountContent.textContent = 'Es gibt derzeit keine anfechtbaren Maßnahmen.';
+      return;
+    }
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const [targetType, targetId] = target.value.split(':');
+      runBackendAction(async () => {
+        const { error } = await supabaseClient.from('moderation_appeals').insert({
+          user_id: currentUser.id,
+          listing_id: targetType === 'listing' ? targetId : null,
+          moderation_id: targetType === 'moderation' ? Number(targetId) : null,
+          message: message.value.trim()
+        });
+        if (error) throw error;
+        showNotice('Dein Einspruch wurde eingereicht.', 'success');
+        await renderAccountContent();
+      });
+    });
+    accountContent.appendChild(form);
+    return;
+  }
+
   if (accountTab === 'messages') {
     const { data: conversations, error } = await supabaseClient
       .from('conversations')
@@ -1086,77 +1388,358 @@ async function renderAccountContent() {
 
 async function renderComplaintList() {
   const moderationSection = document.querySelector('.moderation-section');
-  if (!supabaseClient || !currentProfile?.is_admin) {
-    moderationSection.hidden = true;
+  if (moderationSection) moderationSection.hidden = true;
+}
+
+function showAdminError(error) {
+  if (adminLoginError) {
+    adminLoginError.textContent = error?.message || String(error);
+  }
+}
+
+async function beginAdminMfa() {
+  const { data, error } = await supabaseClient.auth.mfa.listFactors();
+  if (error) throw error;
+  adminLoginForm.hidden = true;
+  adminMfaPanel.hidden = false;
+  const verifiedTotp = (data.totp || []).find((factor) => factor.status === 'verified');
+  if (verifiedTotp) {
+    adminMfaFactorId = verifiedTotp.id;
+    adminMfaQr.hidden = true;
+    adminMfaInstructions.textContent = 'Gib den aktuellen Code aus deiner Authenticator-App ein.';
+  } else {
+    const { data: enrolled, error: enrollError } = await supabaseClient.auth.mfa.enroll({
+      factorType: 'totp',
+      friendlyName: 'Marocmarkt Administrator'
+    });
+    if (enrollError) throw enrollError;
+    adminMfaFactorId = enrolled.id;
+    adminMfaQr.src = enrolled.totp.qr_code;
+    adminMfaQr.hidden = false;
+    adminMfaInstructions.textContent = 'Scanne den QR-Code mit einer Authenticator-App und bestätige anschließend den generierten Code.';
+  }
+  const { data: challenge, error: challengeError } = await supabaseClient.auth.mfa.challenge({
+    factorId: adminMfaFactorId
+  });
+  if (challengeError) throw challengeError;
+  adminMfaChallengeId = challenge.id;
+}
+
+async function finishAdminMfa() {
+  const { error } = await supabaseClient.auth.mfa.verify({
+    factorId: adminMfaFactorId,
+    challengeId: adminMfaChallengeId,
+    code: document.getElementById('adminMfaCode').value.trim()
+  });
+  if (error) throw error;
+  document.getElementById('adminMfaCode').value = '';
+  adminMfaForm.hidden = true;
+  adminMfaInstructions.textContent = 'Mehr-Faktor-Authentifizierung bestätigt.';
+  const { data: role, error: roleError } = await supabaseClient.rpc('get_platform_admin_role');
+  if (roleError) throw roleError;
+  adminRole = role || '';
+  if (!adminRole) {
+    adminSetupForm.hidden = false;
+    adminMfaInstructions.textContent = 'Dieses Konto ist noch kein Administrator. Für die Ersteinrichtung benötigst du den einmaligen Token aus dem Supabase SQL Editor.';
     return;
   }
-  moderationSection.hidden = false;
-  const dict = getLanguageDictionary();
-  const heading = moderationSection.querySelector('.panel-header h3');
-  heading.textContent = dict.reportAdminHeading;
-  const { data: reports, error } = await supabaseClient
-    .from('reports')
-    .select('id, listing_id, reported_user_id, reason, description, status, created_at, reporter_id')
-    .eq('status', 'open')
-    .order('created_at', { ascending: false });
-  if (error) {
-    complaintList.textContent = error.message;
-    showNotice(`${dict.backendUnavailable} ${error.message}`, 'error');
+  await openAdminDashboard();
+}
+
+async function openAdminDashboard() {
+  await renderAdminDashboard();
+  adminLoginDialog.close();
+  adminSetupForm.hidden = true;
+  adminLoginForm.reset();
+  adminDashboardDialog.showModal();
+}
+
+function createAdminActionButton(label, callback) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'btn btn-secondary small-btn';
+  button.textContent = label;
+  button.addEventListener('click', () => runBackendAction(callback));
+  return button;
+}
+
+async function renderAdminDashboard() {
+  if (!supabaseClient || !adminRole) return;
+  const status = document.getElementById('adminDashboardStatus');
+  status.textContent = `Angemeldet als ${adminRole === 'super_admin' ? 'Super-Administrator' : 'Administrator'} · MFA aktiv`;
+  adminManagementSection.hidden = adminRole !== 'super_admin';
+
+  const rows = [];
+  for (let offset = 0; ; offset += 500) {
+    const { data: page, error } = await supabaseClient
+      .from('listings')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .order('id')
+      .range(offset, offset + 499);
+    if (error) throw error;
+    rows.push(...(page || []));
+    if (!page || page.length < 500) break;
+  }
+  const adminListings = rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    seller: row.seller_id,
+    sellerName: row.seller_name,
+    status: row.status,
+    city: row.city,
+    price: Number(row.price),
+    category: row.category,
+    description: row.description,
+    imagePaths: row.image_paths || [],
+    images: (row.image_paths || []).map(publicImageUrl),
+    image: (row.image_paths || []).map(publicImageUrl)[0] || './assets/placeholder.svg'
+  }));
+  await renderAdminNotifications();
+  renderAdminListings(adminListings);
+  await renderAdminReports(adminListings);
+  await renderAdminAppeals(adminListings);
+  await renderAdminAudit();
+  if (adminRole === 'super_admin') await renderAdminRoster();
+}
+
+async function renderAdminNotifications() {
+  const { data, error } = await supabaseClient
+    .from('user_notifications')
+    .select('id, notification_type, message, created_at, read_at')
+    .eq('recipient_id', currentUser.id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  adminNotificationList.replaceChildren();
+  if (!data?.length) {
+    adminNotificationList.textContent = 'Keine Benachrichtigungen.';
     return;
   }
-  complaintList.replaceChildren();
+  data.forEach((notification) => {
+    const row = document.createElement('article');
+    row.className = 'admin-record';
+    const text = document.createElement('p');
+    text.textContent = `${notification.message} · ${new Date(notification.created_at).toLocaleString()}`;
+    row.appendChild(text);
+    if (!notification.read_at) {
+      row.appendChild(createAdminActionButton('Als gelesen markieren', async () => {
+        const { error: updateError } = await supabaseClient
+          .from('user_notifications')
+          .update({ read_at: new Date().toISOString() })
+          .eq('id', notification.id)
+          .eq('recipient_id', currentUser.id);
+        if (updateError) throw updateError;
+        await renderAdminNotifications();
+      }));
+    }
+    adminNotificationList.appendChild(row);
+  });
+}
+
+function renderAdminListings(adminListings) {
+  adminListingList.replaceChildren();
+  if (!adminListings.length) {
+    adminListingList.textContent = 'Keine Anzeigen vorhanden.';
+    return;
+  }
+  adminListings.forEach((listing) => {
+    const row = document.createElement('article');
+    row.className = 'admin-record';
+    const details = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = listing.title;
+    const meta = document.createElement('p');
+    meta.textContent = `${listing.sellerName} · ${listing.seller} · ${listing.status} · ${listing.city}`;
+    details.append(title, meta);
+    const actions = document.createElement('div');
+    actions.className = 'admin-record-actions';
+    actions.appendChild(createAdminActionButton('Prüfen', async () => {
+      openDetailDialog(listing);
+    }));
+    const transitions = listing.status === 'removed'
+      ? [['active', 'Wiederherstellen']]
+      : listing.status === 'paused'
+        ? [['active', 'Freischalten'], ['removed', 'Endgültig entfernen']]
+        : [['paused', 'Deaktivieren'], ['removed', 'Endgültig entfernen']];
+    transitions.forEach(([newStatus, label]) => {
+      actions.appendChild(createAdminActionButton(label, async () => {
+        const reason = window.prompt('Begründung (mindestens 5 Zeichen):');
+        if (reason === null) return;
+        const { error } = await supabaseClient.rpc('admin_set_listing_status', {
+          target_listing: listing.id,
+          new_status: newStatus,
+          action_reason: reason.trim()
+        });
+        if (error) throw error;
+        await loadListings();
+        await renderAdminDashboard();
+      }));
+    });
+    row.append(details, actions);
+    adminListingList.appendChild(row);
+  });
+}
+
+async function renderAdminReports(adminListings) {
+  const reports = [];
+  for (let offset = 0; ; offset += 500) {
+    const { data: page, error } = await supabaseClient
+      .from('reports')
+      .select('id, listing_id, reported_user_id, reporter_id, reason, description, status, created_at')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+      .order('id')
+      .range(offset, offset + 499);
+    if (error) throw error;
+    reports.push(...(page || []));
+    if (!page || page.length < 500) break;
+  }
+  adminReportList.replaceChildren();
   if (!reports?.length) {
-    const empty = document.createElement('div');
-    empty.className = 'complaint-empty';
-    empty.textContent = dict.noReports;
-    complaintList.appendChild(empty);
+    adminReportList.textContent = 'Keine offenen Beschwerden.';
     return;
   }
+  const profileIds = [...new Set(reports.flatMap((report) =>
+    [report.reporter_id, report.reported_user_id].filter(Boolean)
+  ))];
+  const { data: profiles, error: profileError } = profileIds.length
+    ? await supabaseClient.from('public_profiles').select('id, display_name').in('id', profileIds)
+    : { data: [], error: null };
+  if (profileError) throw profileError;
+  const names = new Map((profiles || []).map((profile) => [profile.id, profile.display_name]));
   reports.forEach((report) => {
     const item = document.createElement('article');
-    item.className = 'complaint-item';
-    const detail = document.createElement('p');
-    detail.textContent = `${report.reason}: ${report.description}`;
-    const listing = listings.find((entry) => entry.id === report.listing_id);
-    const target = document.createElement('p');
-    target.textContent = listing ? `${dict.messageListing}: ${listing.title}` : report.reported_user_id || '';
+    item.className = 'admin-record admin-report';
+    const details = document.createElement('div');
+    const reason = document.createElement('strong');
+    reason.textContent = `${report.reason}: ${report.description}`;
+    const listing = adminListings.find((entry) => entry.id === report.listing_id);
+    const meta = document.createElement('p');
+    meta.textContent = `Anzeige: ${listing?.title || 'nicht verfügbar'} · Verkäufer: ${names.get(report.reported_user_id) || report.reported_user_id || listing?.sellerName || '—'} · Meldende Person: ${names.get(report.reporter_id) || report.reporter_id}`;
+    details.append(reason, meta);
     const actions = document.createElement('div');
-    actions.className = 'complaint-actions';
-    if (report.listing_id) {
-      const removeListingButton = document.createElement('button');
-      removeListingButton.type = 'button';
-      removeListingButton.className = 'btn btn-secondary small-btn';
-      removeListingButton.textContent = dict.removeReportedListing;
-      removeListingButton.addEventListener('click', () => runBackendAction(async () => {
-        const { error: updateError } = await supabaseClient.from('listings')
-          .update({ status: 'removed' })
-          .eq('id', report.listing_id);
-        if (updateError) throw updateError;
-        const { error: reportError } = await supabaseClient.from('reports')
-          .update({ status: 'resolved', resolved_at: new Date().toISOString() })
-          .eq('id', report.id);
-        if (reportError) throw reportError;
-        await loadListings();
-        await renderComplaintList();
-      }));
-      actions.appendChild(removeListingButton);
+    actions.className = 'admin-record-actions';
+    if (listing) {
+      actions.appendChild(createAdminActionButton('Anzeige prüfen', async () => openDetailDialog(listing)));
     }
-    for (const [status, label] of [['resolved', dict.markResolved], ['dismissed', dict.dismissReport]]) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'btn btn-secondary small-btn';
-      button.textContent = label;
-      button.addEventListener('click', () => runBackendAction(async () => {
-        const { error: updateError } = await supabaseClient.from('reports')
-          .update({ status, resolved_at: new Date().toISOString() })
-          .eq('id', report.id);
-        if (updateError) throw updateError;
-        await renderComplaintList();
-      }));
-      actions.appendChild(button);
+    if (report.reported_user_id) {
+      for (const [action, label] of [['warning', 'Verwarnen'], ['suspend', '24 h sperren'], ['ban', 'Dauerhaft sperren'], ['unsuspend', 'Sperre aufheben']]) {
+        actions.appendChild(createAdminActionButton(label, async () => {
+          const reasonText = window.prompt('Begründung (mindestens 5 Zeichen):');
+          if (reasonText === null) return;
+          const durationHours = action === 'suspend' ? 24 : null;
+          const { error: moderationError } = await supabaseClient.rpc('admin_moderate_user', {
+            target_user: report.reported_user_id,
+            moderation_action: action,
+            action_reason: reasonText.trim(),
+            duration_hours: durationHours
+          });
+          if (moderationError) throw moderationError;
+          await renderAdminDashboard();
+        }));
+      }
     }
-    item.append(detail, target, actions);
-    complaintList.appendChild(item);
+    for (const [newStatus, label] of [['resolved', 'Erledigen'], ['dismissed', 'Ablehnen']]) {
+      actions.appendChild(createAdminActionButton(label, async () => {
+        const reasonText = window.prompt('Begründung (mindestens 5 Zeichen):');
+        if (reasonText === null) return;
+        const { error: reviewError } = await supabaseClient.rpc('admin_review_report', {
+          target_report: report.id,
+          new_status: newStatus,
+          action_reason: reasonText.trim()
+        });
+        if (reviewError) throw reviewError;
+        await renderAdminDashboard();
+      }));
+    }
+    item.append(details, actions);
+    adminReportList.appendChild(item);
+  });
+}
+
+async function renderAdminAppeals(adminListings) {
+  const { data: appeals, error } = await supabaseClient
+    .from('moderation_appeals')
+    .select('id, user_id, listing_id, moderation_id, message, status, created_at')
+    .eq('status', 'open')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  adminAppealList.replaceChildren();
+  if (!appeals?.length) {
+    adminAppealList.textContent = 'Keine offenen Einsprüche.';
+    return;
+  }
+  const userIds = [...new Set(appeals.map((appeal) => appeal.user_id))];
+  const { data: profiles, error: profileError } = await supabaseClient
+    .from('public_profiles')
+    .select('id, display_name')
+    .in('id', userIds);
+  if (profileError) throw profileError;
+  const names = new Map((profiles || []).map((profile) => [profile.id, profile.display_name]));
+  appeals.forEach((appeal) => {
+    const row = document.createElement('article');
+    row.className = 'admin-record';
+    const details = document.createElement('div');
+    const message = document.createElement('strong');
+    message.textContent = appeal.message;
+    const listing = adminListings.find((entry) => entry.id === appeal.listing_id);
+    const meta = document.createElement('p');
+    meta.textContent = `${names.get(appeal.user_id) || appeal.user_id} · ${listing?.title || (appeal.moderation_id ? `Kontomaßnahme #${appeal.moderation_id}` : 'Anzeige nicht verfügbar')} · ${new Date(appeal.created_at).toLocaleString()}`;
+    details.append(message, meta);
+    const actions = document.createElement('div');
+    actions.className = 'admin-record-actions';
+    for (const [decision, label] of [['accepted', 'Annehmen'], ['rejected', 'Ablehnen']]) {
+      actions.appendChild(createAdminActionButton(label, async () => {
+        const reason = window.prompt('Begründung (mindestens 5 Zeichen):');
+        if (reason === null) return;
+        const { error: reviewError } = await supabaseClient.rpc('admin_review_appeal', {
+          target_appeal: appeal.id,
+          decision,
+          action_reason: reason.trim()
+        });
+        if (reviewError) throw reviewError;
+        await renderAdminDashboard();
+      }));
+    }
+    row.append(details, actions);
+    adminAppealList.appendChild(row);
+  });
+}
+
+async function renderAdminAudit() {
+  const { data, error } = await supabaseClient
+    .from('admin_action_log')
+    .select('admin_id, action, target_type, target_id, reason, created_at')
+    .order('created_at', { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  adminAuditList.replaceChildren();
+  if (!data?.length) {
+    adminAuditList.textContent = 'Noch keine protokollierten Aktionen.';
+    return;
+  }
+  data.forEach((entry) => {
+    const row = document.createElement('article');
+    row.className = 'admin-record';
+    const text = document.createElement('p');
+    text.textContent = `${new Date(entry.created_at).toLocaleString()} · ${entry.action} · ${entry.target_type} ${entry.target_id} · Admin ${entry.admin_id} · ${entry.reason}`;
+    row.appendChild(text);
+    adminAuditList.appendChild(row);
+  });
+}
+
+async function renderAdminRoster() {
+  const { data, error } = await supabaseClient.rpc('admin_list_admins');
+  if (error) throw error;
+  adminRoster.replaceChildren();
+  (data || []).forEach((entry) => {
+    const row = document.createElement('article');
+    row.className = 'admin-record';
+    const text = document.createElement('p');
+    text.textContent = `${entry.display_name || 'Ohne Namen'} · ${entry.role} · ${entry.user_id}`;
+    row.appendChild(text);
+    adminRoster.appendChild(row);
   });
 }
 
@@ -1382,7 +1965,8 @@ function createListingCard(item) {
   button.addEventListener('click', () => openDetailDialog(item));
   button.appendChild(info);
   card.append(imageWrap, button);
-  if (currentUser && item.seller === currentUser.id) {
+  const isOwner = currentUser && item.seller === currentUser.id;
+  if (isOwner) {
     const actions = document.createElement('div');
     actions.className = 'listing-card-actions';
     const editButton = document.createElement('button');
@@ -1391,6 +1975,15 @@ function createListingCard(item) {
     editButton.textContent = translations[lang].editListing;
     editButton.addEventListener('click', () => openAdForm(item));
     actions.appendChild(editButton);
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'btn btn-secondary small-btn';
+    deleteButton.textContent = translations[lang].deleteListing;
+    deleteButton.addEventListener('click', () => {
+      if (!window.confirm(`${translations[lang].deleteListing}: ${item.title}?`)) return;
+      runBackendAction(() => deleteListing(item));
+    });
+    actions.appendChild(deleteButton);
     card.appendChild(actions);
   }
   return card;
@@ -1551,7 +2144,7 @@ function closeDetailDialog() {
 }
 
 function openAdForm(listing = null) {
-  if (!requireSignedIn()) return;
+  if (!requireListingEligibility()) return;
   currentEditingListing = listing;
   adForm.reset();
   formError.textContent = '';
@@ -1652,7 +2245,7 @@ adForm.addEventListener('reset', () => {
 
 adForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!requireSignedIn()) return;
+  if (!requireListingEligibility()) return;
 
   const formData = new FormData(adForm);
   const selectedFiles = Array.from(imagesInput.files || []);
@@ -1774,6 +2367,103 @@ document.querySelectorAll('.category-card').forEach((button) => {
 sellButton.addEventListener('click', () => openAdForm());
 messageNotificationsButton.addEventListener('click', () => openAccountDialog('messages'));
 complaintsButton?.addEventListener('click', () => openComplaintDialog());
+adminAccessButton?.addEventListener('click', () => {
+  window.location.assign('/admin/');
+});
+document.getElementById('closeAdminLoginButton')?.addEventListener('click', () => {
+  adminLoginForm.reset();
+  adminSetupForm.reset();
+  adminMfaForm.reset();
+  adminLoginDialog.close();
+});
+document.getElementById('closeAdminDashboardButton')?.addEventListener('click', () => adminDashboardDialog.close());
+document.getElementById('adminDashboardLogoutButton')?.addEventListener('click', async () => {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) {
+    showNotice(`${getLanguageDictionary().backendUnavailable} ${error.message}`, 'error');
+    return;
+  }
+  adminRole = '';
+  window.location.replace('/admin/');
+});
+adminLoginForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!supabaseClient) {
+    showAdminError(new Error(getLanguageDictionary().backendNotConfigured));
+    return;
+  }
+  const submitButton = adminLoginForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  adminLoginError.textContent = '';
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: document.getElementById('adminEmail').value.trim(),
+      password: document.getElementById('adminPassword').value
+    });
+    if (error) throw error;
+    if (!data.session) throw new Error('Die Anmeldung wurde nicht abgeschlossen.');
+    document.getElementById('adminPassword').value = '';
+    await beginAdminMfa();
+  } catch (error) {
+    showAdminError(error);
+    if (!adminMfaPanel.hidden) {
+      adminLoginForm.hidden = false;
+      adminMfaPanel.hidden = true;
+      adminMfaForm.hidden = false;
+      adminSetupForm.hidden = true;
+    }
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+adminMfaForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const submitButton = adminMfaForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  adminLoginError.textContent = '';
+  try {
+    await finishAdminMfa();
+  } catch (error) {
+    showAdminError(error);
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+adminSetupForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const submitButton = adminSetupForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  adminLoginError.textContent = '';
+  try {
+    const { data, error } = await supabaseClient.rpc('bootstrap_super_admin', {
+      setup_token: document.getElementById('adminSetupToken').value.trim()
+    });
+    if (error) throw error;
+    adminRole = data;
+    document.getElementById('adminSetupToken').value = '';
+    await openAdminDashboard();
+  } catch (error) {
+    showAdminError(error);
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+document.getElementById('adminManagementForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const reason = window.prompt('Begründung für die Rollenänderung (mindestens 5 Zeichen):');
+  if (reason === null) return;
+  const { error } = await supabaseClient.rpc('admin_manage_admin', {
+    target_user: document.getElementById('managedAdminId').value.trim(),
+    new_role: document.getElementById('managedAdminRole').value,
+    action_reason: reason.trim()
+  });
+  if (error) {
+    showNotice(`${getLanguageDictionary().backendUnavailable} ${error.message}`, 'error');
+    return;
+  }
+  document.getElementById('adminManagementForm').reset();
+  await runBackendAction(renderAdminDashboard);
+});
 complaintCloseButton?.addEventListener('click', closeComplaintDialog);
 cancelComplaintButton?.addEventListener('click', closeComplaintDialog);
 closeAdDialogButton.addEventListener('click', closeAdForm);
@@ -1823,6 +2513,17 @@ document.getElementById('toggleAuthModeButton').addEventListener('click', () => 
   authMode = authMode === 'signin' ? 'signup' : 'signin';
   updateAuthDialog();
 });
+document.getElementById('resendPhoneCodeButton').addEventListener('click', () => {
+  const button = document.getElementById('resendPhoneCodeButton');
+  button.disabled = true;
+  sendPhoneVerification(currentProfile?.phone, true)
+    .catch((error) => {
+      authError.textContent = error.message || String(error);
+    })
+    .finally(() => {
+      button.disabled = false;
+    });
+});
 document.getElementById('forgotPasswordButton').addEventListener('click', async () => {
   if (!requireBackend()) return;
   const emailInput = document.getElementById('authEmail');
@@ -1861,27 +2562,69 @@ document.querySelectorAll('.account-tab').forEach((button) => {
 authForm.addEventListener('submit', (event) => {
   event.preventDefault();
   if (!requireBackend()) return;
-  const email = String(new FormData(authForm).get('email') || '').trim();
-  const password = String(new FormData(authForm).get('password') || '');
-  const displayName = String(new FormData(authForm).get('displayName') || '').trim();
+  const formData = new FormData(authForm);
+  const mode = authMode;
+  const email = String(formData.get('email') || '').trim();
+  const password = String(formData.get('password') || '');
+  const displayName = String(formData.get('displayName') || '').trim();
+  const address = String(formData.get('address') || '').trim();
+  const phone = String(formData.get('phone') || '').trim();
   const submitButton = document.getElementById('authSubmitButton');
   submitButton.disabled = true;
   (async () => {
     try {
-      const result = authMode === 'signup'
+      if (mode === 'phoneVerification') {
+        const token = String(formData.get('otp') || '').trim();
+        if (!token) throw new Error(getLanguageDictionary().phoneOtpRequired);
+        const verified = await supabaseClient.auth.verifyOtp({
+          phone: currentProfile?.phone || '',
+          token,
+          type: 'phone_change'
+        });
+        if (verified.error) throw verified.error;
+        if (!verified.data.user) throw new Error(getLanguageDictionary().backendUnavailable);
+        currentUser = verified.data.user;
+        phoneVerificationPendingFor = '';
+        await loadProfile(currentUser);
+        authDialog.close();
+        authForm.reset();
+        authMode = 'signin';
+        updateAuthDialog();
+        showNotice(getLanguageDictionary().phoneOtpVerified, 'success');
+        return;
+      }
+
+      if (mode === 'contactSetup') {
+        if (!address) throw new Error(getLanguageDictionary().contactDetailsRequired);
+        if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error(getLanguageDictionary().phoneInvalid);
+        const { error } = await supabaseClient.from('profiles')
+          .update({ address, phone })
+          .eq('id', currentUser.id);
+        if (error) throw error;
+        currentProfile = { ...currentProfile, address, phone };
+        await sendPhoneVerification(phone, true);
+        return;
+      }
+
+      if (mode === 'signup') {
+        if (!displayName || !address) throw new Error(getLanguageDictionary().contactDetailsRequired);
+        if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error(getLanguageDictionary().phoneInvalid);
+      }
+
+      const result = mode === 'signup'
         ? await supabaseClient.auth.signUp({
           email,
           password,
           options: {
-            data: { display_name: displayName },
+            data: { display_name: displayName, address, phone },
             emailRedirectTo: window.location.href
           }
         })
-        : authMode === 'recovery'
+        : mode === 'recovery'
           ? await supabaseClient.auth.updateUser({ password })
           : await supabaseClient.auth.signInWithPassword({ email, password });
       if (result.error) throw result.error;
-      if (authMode === 'recovery') {
+      if (mode === 'recovery') {
         authDialog.close();
         authForm.reset();
         authMode = 'signin';
@@ -1889,10 +2632,13 @@ authForm.addEventListener('submit', (event) => {
         showNotice(getLanguageDictionary().passwordUpdated, 'success');
         return;
       }
-      if (authMode === 'signup' && !result.data.session) {
+      if (mode === 'signup' && !result.data.session) {
         authError.textContent = getLanguageDictionary().authConfirmEmail;
         return;
       }
+      currentUser = result.data.user;
+      await loadProfile(currentUser);
+      if (authMode === 'phoneVerification' || authMode === 'contactSetup') return;
       authDialog.close();
       authForm.reset();
       clearNotice();
