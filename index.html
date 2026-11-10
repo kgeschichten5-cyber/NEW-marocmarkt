@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./style.css?v=4" />
-  </head>
+  </head><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <body>
     <header class="topbar">
       <div class="container topbar-inner">
@@ -372,17 +372,13 @@
         </div>
         <form id="authForm" novalidate>
           <div class="form-grid single-column">
-            <label id="authNameField" hidden>
-              <span data-i18n="accountNameLabel">Name</span>
-              <input id="authName" name="displayName" autocomplete="name" maxlength="80" />
-            </label>
             <label id="authAddressField" hidden>
               <span data-i18n="accountAddressLabel">Adresse</span>
               <input id="authAddress" name="address" autocomplete="street-address" maxlength="300" />
             </label>
             <label id="authPhoneField" hidden>
-              <span data-i18n="accountPhoneLabel">Telefonnummer</span>
-              <input id="authPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+212…" />
+              <span data-i18n="accountPhoneLabel">Handynummer (optional)</span>
+              <input id="authPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" />
             </label>
             <label id="authEmailField">
               <span data-i18n="authEmailLabel">E-Mail</span>
@@ -392,16 +388,11 @@
               <span data-i18n="authPasswordLabel">Passwort</span>
               <input id="authPassword" name="password" type="password" autocomplete="current-password" minlength="8" required />
             </label>
-            <label id="authOtpField" hidden>
-              <span data-i18n="phoneOtpLabel">SMS-Bestätigungscode</span>
-              <input id="authOtp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" />
-            </label>
           </div>
           <button type="button" class="auth-forgot-password" id="forgotPasswordButton" data-i18n="forgotPassword">Passwort vergessen?</button>
           <p id="authError" class="form-error" aria-live="polite"></p>
           <div class="dialog-actions">
             <button type="button" class="btn btn-secondary" id="toggleAuthModeButton" data-i18n="authCreateAccount">Konto erstellen</button>
-            <button type="button" class="btn btn-secondary" id="resendPhoneCodeButton" data-i18n="phoneOtpResend" hidden>Code erneut senden</button>
             <button type="submit" class="btn btn-primary" id="authSubmitButton" data-i18n="loginButton">Anmelden</button>
           </div>
         </form>

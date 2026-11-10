@@ -13,7 +13,7 @@ Marocmarkt ist eine mehrsprachige Kleinanzeigen-Webseite für Marokko. Das Front
 
 1. Erstelle ein Supabase-Projekt.
 2. Öffne den SQL Editor im Supabase-Dashboard und führe den Inhalt von `supabase/schema.sql` aus.
-3. Aktiviere unter **Authentication → Providers** die E-Mail-Anmeldung und Telefon/SMS. Richte dort einen SMS-Anbieter ein. Trage unter den Auth-URL-Einstellungen deine lokale URL und später deine Produktionsdomain als Redirect-URLs ein, damit E-Mail-Bestätigung und Passwortzurücksetzung zur Website zurückführen.
+3. Aktiviere unter **Authentication → Providers** die E-Mail-Anmeldung und E-Mail-Bestätigung. Trage unter den Auth-URL-Einstellungen deine lokale URL und später deine Produktionsdomain als Redirect-URLs ein, damit E-Mail-Bestätigung und Passwortzurücksetzung zur Website zurückführen.
 4. Kopiere Projekt-URL und den öffentlichen **anon/publishable key** aus den API-Einstellungen in `supabase-config.js`:
 
    ```js
@@ -33,9 +33,9 @@ Marocmarkt ist eine mehrsprachige Kleinanzeigen-Webseite für Marokko. Das Front
 
    Öffne danach `http://localhost:8080/`.
 
-   Bei der Registrierung sind Name, Adresse und Telefonnummer erforderlich. Telefonnummern müssen im internationalen E.164-Format eingegeben werden (zum Beispiel `+212…`). Nach Anmeldung wird ein SMS-Code zur Bestätigung gesendet. Erst mit bestätigter Telefonnummer können Anzeigen veröffentlicht oder bearbeitet werden. Adresse und Telefonnummer bleiben private Profildaten und werden nicht in öffentlichen Anzeigen angezeigt.
+   Bei der Registrierung sind Adresse, E-Mail-Adresse und Passwort erforderlich. Eine Handynummer kann optional angegeben werden; eine SMS-Bestätigung ist nicht erforderlich. Vor der Anmeldung muss die E-Mail-Adresse über den Link im Postfach bestätigt werden. Mit bestätigter E-Mail-Adresse und gespeicherter Adresse können Anzeigen veröffentlicht und bearbeitet werden.
 
-   Führe das aktualisierte `supabase/schema.sql` auch für bestehende Projekte im SQL Editor aus. Die Datenbankrichtlinien erzwingen die SMS-Bestätigung beim Erstellen und Bearbeiten von Anzeigen.
+   Führe das aktualisierte `supabase/schema.sql` auch für bestehende Projekte im SQL Editor aus. Die Datenbankrichtlinien erzwingen die E-Mail-Bestätigung und eine gespeicherte Adresse beim Erstellen und Bearbeiten von Anzeigen.
 
 ### Super-Administrator einmalig einrichten
 
@@ -101,8 +101,8 @@ Wenn **Invalid login credentials** trotz bestätigtem Konto weiterhin erscheint,
 
 - Französisch und Arabisch
 - Suche, Stadt-/Kategorie-Filter und Sortierung
-- E-Mail-Registrierung, Anmeldung und Abmeldung mit Adress- und Telefonnummer im privaten Profil
-- Telefonnummer per SMS-Code bestätigen, bevor Anzeigen veröffentlicht werden
+- Registrierung mit Adresse, E-Mail und Passwort; Anmeldung erst nach E-Mail-Bestätigung
+- Anzeigen mit bestätigtem E-Mail-Konto und gespeicherter Adresse veröffentlichen und bearbeiten
 - Anzeigen dauerhaft speichern, bearbeiten und löschen
 - Mehrere Bilder pro Anzeige (JPG, PNG oder WebP; maximal 10 Bilder zu je 5 MB)
 - Kontoansicht für eigene Anzeigen, Favoriten und Nachrichten

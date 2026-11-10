@@ -148,10 +148,8 @@ const unreadMessageCount = document.getElementById('unreadMessageCount');
 const logoutButton = document.getElementById('logoutButton');
 const authDialog = document.getElementById('authDialog');
 const authForm = document.getElementById('authForm');
-const authNameField = document.getElementById('authNameField');
 const authAddressField = document.getElementById('authAddressField');
 const authPhoneField = document.getElementById('authPhoneField');
-const authOtpField = document.getElementById('authOtpField');
 const authError = document.getElementById('authError');
 const accountDialog = document.getElementById('accountDialog');
 const accountContent = document.getElementById('accountContent');
@@ -180,8 +178,6 @@ const adminRoster = document.getElementById('adminRoster');
 let currentUser = null;
 let currentProfile = null;
 let authMode = 'signin';
-let phoneVerificationPendingFor = '';
-let phoneVerificationSending = false;
 let currentEditingListing = null;
 let currentReportListing = null;
 let activeConversation = null;
@@ -213,22 +209,12 @@ const translations = {
     emptyMessages: 'Noch keine Nachrichten.',
     authCreateAccount: 'Konto erstellen',
     authHaveAccount: 'Ich habe schon ein Konto',
-    accountNameLabel: 'Name',
     accountAddressLabel: 'Adresse',
-    accountPhoneLabel: 'Telefonnummer (international, z. B. +212…)',
+    accountPhoneLabel: 'Handynummer (optional)',
     authEmailLabel: 'E-Mail',
     authPasswordLabel: 'Passwort',
-    phoneOtpLabel: 'SMS-Bestätigungscode',
-    phoneOtpTitle: 'Telefonnummer bestätigen',
-    phoneOtpResend: 'Code erneut senden',
-    phoneOtpVerify: 'Telefon bestätigen',
     contactSaveButton: 'Daten speichern',
-    phoneOtpSent: 'Wir haben einen Bestätigungscode per SMS gesendet.',
-    phoneOtpVerified: 'Telefonnummer bestätigt. Du kannst jetzt Anzeigen aufgeben.',
-    phoneOtpRequired: 'Bitte gib den SMS-Code ein.',
-    phoneInvalid: 'Bitte gib eine gültige Telefonnummer im internationalen Format ein (z. B. +212…).',
-    contactDetailsRequired: 'Bitte gib deine Adresse und Telefonnummer ein.',
-    phoneVerificationRequired: 'Bestätige deine Telefonnummer per SMS, bevor du Anzeigen aufgibst.',
+    contactDetailsRequired: 'Bitte gib deine Adresse ein.',
     forgotPassword: 'Passwort vergessen?',
     resetPasswordSent: 'Wir haben dir einen Link zum Zurücksetzen deines Passworts per E-Mail gesendet.',
     newPasswordLabel: 'Neues Passwort',
@@ -372,22 +358,12 @@ const translations = {
     emptyMessages: 'لا توجد رسائل بعد.',
     authCreateAccount: 'إنشاء حساب',
     authHaveAccount: 'لدي حساب بالفعل',
-    accountNameLabel: 'الاسم',
     accountAddressLabel: 'العنوان',
-    accountPhoneLabel: 'رقم الهاتف (بالتنسيق الدولي، مثل ‎+212…)',
+    accountPhoneLabel: 'رقم الهاتف (اختياري)',
     authEmailLabel: 'البريد الإلكتروني',
     authPasswordLabel: 'كلمة المرور',
-    phoneOtpLabel: 'رمز التأكيد عبر الرسائل القصيرة',
-    phoneOtpTitle: 'تأكيد رقم الهاتف',
-    phoneOtpResend: 'إعادة إرسال الرمز',
-    phoneOtpVerify: 'تأكيد الهاتف',
     contactSaveButton: 'حفظ البيانات',
-    phoneOtpSent: 'أرسلنا رمز التأكيد عبر رسالة قصيرة.',
-    phoneOtpVerified: 'تم تأكيد رقم الهاتف. يمكنك الآن نشر الإعلانات.',
-    phoneOtpRequired: 'يرجى إدخال رمز الرسالة القصيرة.',
-    phoneInvalid: 'يرجى إدخال رقم هاتف صالح بالتنسيق الدولي (مثل ‎+212…).',
-    contactDetailsRequired: 'يرجى إدخال عنوانك ورقم هاتفك.',
-    phoneVerificationRequired: 'أكد رقم هاتفك عبر رسالة قصيرة قبل نشر الإعلانات.',
+    contactDetailsRequired: 'يرجى إدخال عنوانك.',
     forgotPassword: 'هل نسيت كلمة المرور؟',
     resetPasswordSent: 'أرسلنا إليك رابطًا لإعادة تعيين كلمة المرور عبر البريد الإلكتروني.',
     newPasswordLabel: 'كلمة المرور الجديدة',
@@ -531,22 +507,12 @@ const translations = {
     emptyMessages: 'Aucun message pour le moment.',
     authCreateAccount: 'Créer un compte',
     authHaveAccount: 'J’ai déjà un compte',
-    accountNameLabel: 'Nom',
     accountAddressLabel: 'Adresse',
-    accountPhoneLabel: 'Téléphone (format international, ex. +212…)',
+    accountPhoneLabel: 'Téléphone (facultatif)',
     authEmailLabel: 'E-mail',
     authPasswordLabel: 'Mot de passe',
-    phoneOtpLabel: 'Code de confirmation SMS',
-    phoneOtpTitle: 'Confirmer le numéro de téléphone',
-    phoneOtpResend: 'Renvoyer le code',
-    phoneOtpVerify: 'Confirmer le téléphone',
     contactSaveButton: 'Enregistrer',
-    phoneOtpSent: 'Nous avons envoyé un code de confirmation par SMS.',
-    phoneOtpVerified: 'Numéro confirmé. Vous pouvez maintenant publier des annonces.',
-    phoneOtpRequired: 'Veuillez saisir le code reçu par SMS.',
-    phoneInvalid: 'Veuillez saisir un numéro valide au format international (ex. +212…).',
-    contactDetailsRequired: 'Veuillez saisir votre adresse et votre numéro de téléphone.',
-    phoneVerificationRequired: 'Confirmez votre numéro par SMS avant de publier une annonce.',
+    contactDetailsRequired: 'Veuillez saisir votre adresse.',
     forgotPassword: 'Mot de passe oublié ?',
     resetPasswordSent: 'Nous vous avons envoyé un lien de réinitialisation par e-mail.',
     newPasswordLabel: 'Nouveau mot de passe',
@@ -722,14 +688,9 @@ function requireSignedIn() {
 
 function requireListingEligibility() {
   if (!requireSignedIn()) return false;
-  if (!currentProfile?.address?.trim() || !currentProfile?.phone?.trim()) {
+  if (!currentProfile?.address?.trim()) {
     showNotice(getLanguageDictionary().contactDetailsRequired, 'error');
     openContactSetup();
-    return false;
-  }
-  if (!hasVerifiedProfilePhone()) {
-    showNotice(getLanguageDictionary().phoneVerificationRequired, 'error');
-    runBackendAction(ensurePhoneVerification);
     return false;
   }
   return true;
@@ -747,44 +708,32 @@ function updateAuthDialog() {
   const isSignUp = authMode === 'signup';
   const isRecovery = authMode === 'recovery';
   const isContactSetup = authMode === 'contactSetup';
-  const isPhoneVerification = authMode === 'phoneVerification';
-  authNameField.hidden = !isSignUp;
   authAddressField.hidden = !isSignUp && !isContactSetup;
-  authPhoneField.hidden = !isSignUp && !isContactSetup;
-  authOtpField.hidden = !isPhoneVerification;
-  document.getElementById('authEmailField').hidden = isRecovery || isContactSetup || isPhoneVerification;
-  document.getElementById('authPasswordField').hidden = isContactSetup || isPhoneVerification;
+  authPhoneField.hidden = !isSignUp;
+  document.getElementById('authEmailField').hidden = isRecovery || isContactSetup;
+  document.getElementById('authPasswordField').hidden = isContactSetup;
   document.getElementById('authPasswordField').querySelector('span').textContent = isRecovery ? dict.newPasswordLabel : dict.authPasswordLabel;
-  document.getElementById('forgotPasswordButton').hidden = isSignUp || isRecovery || isContactSetup || isPhoneVerification;
-  document.getElementById('toggleAuthModeButton').hidden = isRecovery || isContactSetup || isPhoneVerification;
-  document.getElementById('resendPhoneCodeButton').hidden = !isPhoneVerification;
+  document.getElementById('forgotPasswordButton').hidden = isSignUp || isRecovery || isContactSetup;
+  document.getElementById('toggleAuthModeButton').hidden = isRecovery || isContactSetup;
   document.querySelector('#authDialog h3').textContent = isRecovery
     ? dict.newPasswordLabel
-    : isPhoneVerification
-      ? dict.phoneOtpTitle
-      : isContactSetup
-        ? dict.accountTitle
-        : isSignUp
-          ? dict.authCreateAccount
-          : dict.loginButton;
+    : isContactSetup
+      ? dict.accountTitle
+      : isSignUp
+        ? dict.authCreateAccount
+        : dict.loginButton;
   document.getElementById('authSubmitButton').textContent = isRecovery
     ? dict.newPasswordLabel
-    : isPhoneVerification
-      ? dict.phoneOtpVerify
-      : isContactSetup
-        ? dict.contactSaveButton
-        : isSignUp
-          ? dict.authCreateAccount
-          : dict.loginButton;
+    : isContactSetup
+      ? dict.contactSaveButton
+      : isSignUp
+        ? dict.authCreateAccount
+        : dict.loginButton;
   document.getElementById('toggleAuthModeButton').textContent = isSignUp ? dict.authHaveAccount : dict.authCreateAccount;
   document.getElementById('authPassword').autocomplete = isSignUp || isRecovery ? 'new-password' : 'current-password';
-  document.getElementById('authEmail').required = !isRecovery && !isContactSetup && !isPhoneVerification;
-  document.getElementById('authPassword').required = !isContactSetup && !isPhoneVerification;
-  document.getElementById('authName').required = isSignUp;
+  document.getElementById('authEmail').required = !isRecovery && !isContactSetup;
+  document.getElementById('authPassword').required = !isContactSetup;
   document.getElementById('authAddress').required = isSignUp || isContactSetup;
-  document.getElementById('authPhone').required = isSignUp || isContactSetup;
-  document.getElementById('authOtp').required = isPhoneVerification;
-  if (!isPhoneVerification) document.getElementById('authOtp').value = '';
   document.getElementById('authPassword').value = '';
   authError.textContent = '';
 }
@@ -793,70 +742,7 @@ function openContactSetup() {
   authMode = 'contactSetup';
   updateAuthDialog();
   document.getElementById('authAddress').value = currentProfile?.address || '';
-  document.getElementById('authPhone').value = currentProfile?.phone || '';
   if (!authDialog.open) authDialog.showModal();
-}
-
-function hasVerifiedProfilePhone() {
-  return Boolean(
-    currentUser?.phone_confirmed_at
-    && currentProfile?.phone
-    && currentUser.phone === currentProfile.phone
-  );
-}
-
-async function sendPhoneVerification(phoneValue, resend = false) {
-  const phone = String(phoneValue || '').trim();
-  if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
-    throw new Error(getLanguageDictionary().phoneInvalid);
-  }
-  if (phoneVerificationSending || (!resend && phoneVerificationPendingFor === phone)) return;
-
-  phoneVerificationSending = true;
-  phoneVerificationPendingFor = phone;
-  authMode = 'phoneVerification';
-  updateAuthDialog();
-  document.getElementById('authPhone').value = phone;
-  if (!authDialog.open) authDialog.showModal();
-  try {
-    const { data, error } = await supabaseClient.auth.updateUser({ phone });
-    if (error) throw error;
-    if (data.user) currentUser = data.user;
-    authError.textContent = getLanguageDictionary().phoneOtpSent;
-    updateAuthUi();
-  } catch (error) {
-    phoneVerificationPendingFor = '';
-    authError.textContent = error.message || String(error);
-    throw error;
-  } finally {
-    phoneVerificationSending = false;
-  }
-}
-
-async function ensurePhoneVerification() {
-  if (!currentUser) return;
-  const address = currentProfile?.address?.trim();
-  const phone = currentProfile?.phone?.trim();
-  if (!address || !phone) {
-    if (authMode !== 'contactSetup' || !authDialog.open) openContactSetup();
-    return;
-  }
-  if (hasVerifiedProfilePhone()) {
-    phoneVerificationPendingFor = '';
-    if (authMode === 'phoneVerification' && authDialog.open) authDialog.close();
-    updateAuthUi();
-    return;
-  }
-  if (phoneVerificationPendingFor === phone) {
-    if (authMode !== 'phoneVerification') {
-      authMode = 'phoneVerification';
-      updateAuthDialog();
-      document.getElementById('authPhone').value = phone;
-    }
-    if (!authDialog.open) authDialog.showModal();
-    return;
-  }
-  await sendPhoneVerification(phone);
 }
 
 function updateAuthUi() {
@@ -985,14 +871,13 @@ async function loadProfile(user) {
     adminAuditList?.replaceChildren();
     adminRoster?.replaceChildren();
     favorites.clear();
-    phoneVerificationPendingFor = '';
     updateAuthUi();
     return;
   }
 
   const { data, error } = await supabaseClient
     .from('profiles')
-    .select('display_name, is_admin, address, phone')
+    .select('display_name, is_admin, address')
     .eq('id', user.id)
     .single();
   if (error) {
@@ -1003,7 +888,6 @@ async function loadProfile(user) {
   await loadFavorites();
   updateAuthUi();
   refreshUnreadMessageCount();
-  await ensurePhoneVerification();
 }
 
 async function initializeBackend() {
@@ -1034,6 +918,10 @@ async function initializeBackend() {
   await loadProfile(data.session?.user || null);
   await loadListings();
   await renderComplaintList();
+  if (new URLSearchParams(window.location.search).get('register') === '1' && !currentUser) {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.hash}`);
+    openAuthDialog('signup');
+  }
   if (isAdminDashboardRoute) {
     if (!data.session) {
       window.location.replace('/admin/');
@@ -2513,17 +2401,6 @@ document.getElementById('toggleAuthModeButton').addEventListener('click', () => 
   authMode = authMode === 'signin' ? 'signup' : 'signin';
   updateAuthDialog();
 });
-document.getElementById('resendPhoneCodeButton').addEventListener('click', () => {
-  const button = document.getElementById('resendPhoneCodeButton');
-  button.disabled = true;
-  sendPhoneVerification(currentProfile?.phone, true)
-    .catch((error) => {
-      authError.textContent = error.message || String(error);
-    })
-    .finally(() => {
-      button.disabled = false;
-    });
-});
 document.getElementById('forgotPasswordButton').addEventListener('click', async () => {
   if (!requireBackend()) return;
   const emailInput = document.getElementById('authEmail');
@@ -2566,49 +2443,29 @@ authForm.addEventListener('submit', (event) => {
   const mode = authMode;
   const email = String(formData.get('email') || '').trim();
   const password = String(formData.get('password') || '');
-  const displayName = String(formData.get('displayName') || '').trim();
   const address = String(formData.get('address') || '').trim();
   const phone = String(formData.get('phone') || '').trim();
   const submitButton = document.getElementById('authSubmitButton');
   submitButton.disabled = true;
   (async () => {
     try {
-      if (mode === 'phoneVerification') {
-        const token = String(formData.get('otp') || '').trim();
-        if (!token) throw new Error(getLanguageDictionary().phoneOtpRequired);
-        const verified = await supabaseClient.auth.verifyOtp({
-          phone: currentProfile?.phone || '',
-          token,
-          type: 'phone_change'
-        });
-        if (verified.error) throw verified.error;
-        if (!verified.data.user) throw new Error(getLanguageDictionary().backendUnavailable);
-        currentUser = verified.data.user;
-        phoneVerificationPendingFor = '';
-        await loadProfile(currentUser);
+      if (mode === 'contactSetup') {
+        if (!address) throw new Error(getLanguageDictionary().contactDetailsRequired);
+        const { error } = await supabaseClient.from('profiles')
+          .update({ address })
+          .eq('id', currentUser.id);
+        if (error) throw error;
+        currentProfile = { ...currentProfile, address };
         authDialog.close();
         authForm.reset();
         authMode = 'signin';
         updateAuthDialog();
-        showNotice(getLanguageDictionary().phoneOtpVerified, 'success');
-        return;
-      }
-
-      if (mode === 'contactSetup') {
-        if (!address) throw new Error(getLanguageDictionary().contactDetailsRequired);
-        if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error(getLanguageDictionary().phoneInvalid);
-        const { error } = await supabaseClient.from('profiles')
-          .update({ address, phone })
-          .eq('id', currentUser.id);
-        if (error) throw error;
-        currentProfile = { ...currentProfile, address, phone };
-        await sendPhoneVerification(phone, true);
+        clearNotice();
         return;
       }
 
       if (mode === 'signup') {
-        if (!displayName || !address) throw new Error(getLanguageDictionary().contactDetailsRequired);
-        if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error(getLanguageDictionary().phoneInvalid);
+        if (!address) throw new Error(getLanguageDictionary().contactDetailsRequired);
       }
 
       const result = mode === 'signup'
@@ -2616,7 +2473,7 @@ authForm.addEventListener('submit', (event) => {
           email,
           password,
           options: {
-            data: { display_name: displayName, address, phone },
+            data: { address, phone },
             emailRedirectTo: window.location.href
           }
         })
@@ -2638,7 +2495,6 @@ authForm.addEventListener('submit', (event) => {
       }
       currentUser = result.data.user;
       await loadProfile(currentUser);
-      if (authMode === 'phoneVerification' || authMode === 'contactSetup') return;
       authDialog.close();
       authForm.reset();
       clearNotice();
