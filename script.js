@@ -114,6 +114,15 @@ const popularGrid = document.getElementById('popularGrid');
 const searchInput = document.getElementById('searchInput');
 const cityFilter = document.getElementById('cityFilter');
 const navCityFilter = document.getElementById('navCityFilter');
+const mobileNavCityFilter = document.getElementById('mobileNavCityFilter');
+const mobileMenuButton = document.getElementById('mobileMenuButton');
+const mobileNavPanel = document.getElementById('mobileNavPanel');
+const cartButton = document.getElementById('cartButton');
+const cartButtonCount = document.getElementById('cartButtonCount');
+const cartDrawer = document.getElementById('cartDrawer');
+const cartItems = document.getElementById('cartItems');
+const cartTotal = document.getElementById('cartTotal');
+const cartCheckoutButton = document.getElementById('cartCheckoutButton');
 const categoryFilter = document.getElementById('categoryFilter');
 const sortSelect = document.getElementById('sortSelect');
 const minimumPriceInput = document.getElementById('minimumPriceInput');
@@ -168,7 +177,36 @@ const adminManagementSection = document.getElementById('adminManagementSection')
 const adminRoster = document.getElementById('adminRoster');
 let currentUser = null;
 let currentProfile = null;
+const cart = new Map();
+const CART_STORAGE_KEY = 'marocmarkt-cart';
 let authMode = 'signin';
+
+function loadCartFromStorage() {
+  try {
+    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (!savedCart) return;
+    const parsedCart = JSON.parse(savedCart);
+    if (!Array.isArray(parsedCart)) return;
+    parsedCart.forEach((item) => {
+      if (item && item.id != null) {
+        cart.set(Number(item.id), { ...item, price: Number(item.price || 0) });
+      }
+    });
+  } catch (error) {
+    console.warn('Cart storage could not be loaded:', error);
+  }
+}
+
+function persistCart() {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(Array.from(cart.values())));
+  } catch (error) {
+    console.warn('Cart storage could not be saved:', error);
+  }
+}
+
+loadCartFromStorage();
+
 let currentEditingListing = null;
 let currentReportListing = null;
 let activeConversation = null;
@@ -176,6 +214,65 @@ let chatRefreshTimer = null;
 let notificationRefreshTimer = null;
 let accountTab = 'listings';
 let adminRole = '';
+
+function updateCartUi() {
+  persistCart();
+  const items = Array.from(cart.values());
+  const total = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const count = items.length;
+  if (cartButtonCount) {
+    cartButtonCount.textContent = String(count);
+    cartButtonCount.hidden = count === 0;
+  }
+  if (cartDrawer && cartItems) {
+    cartItems.replaceChildren();
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.className = 'complaint-empty';
+      empty.textContent = 'Dein Warenkorb ist leer.';
+      cartItems.appendChild(empty);
+    } else {
+      items.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        const image = document.createElement('img');
+        image.src = getPrimaryImage(item);
+        image.alt = item.title;
+        const details = document.createElement('div');
+        const title = document.createElement('h4');
+        title.textContent = item.title;
+        const price = document.createElement('p');
+        price.textContent = formatPrice(item.price, getCurrentLanguage());
+        details.append(title, price);
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = 'Entfernen';
+        remove.setAttribute('aria-label', `Artikel ${item.title} entfernen`);
+        remove.addEventListener('click', () => {
+          cart.delete(item.id);
+          updateCartUi();
+        });
+        row.append(image, details, remove);
+        cartItems.appendChild(row);
+      });
+    }
+  }
+  if (cartTotal) {
+    cartTotal.textContent = `${formatPrice(total, getCurrentLanguage())}`;
+  }
+}
+
+function setMobileMenu(open) {
+  if (!mobileMenuButton || !mobileNavPanel) return;
+  mobileMenuButton.setAttribute('aria-expanded', String(open));
+  mobileMenuButton.textContent = open ? '✕' : '☰';
+  mobileNavPanel.hidden = !open;
+}
+
+function toggleMobileMenu() {
+  if (!mobileNavPanel) return;
+  setMobileMenu(mobileNavPanel.hidden);
+}
 
 function getPrimaryImage(item) {
   if (Array.isArray(item.images) && item.images.length > 0) {
@@ -1722,6 +1819,8 @@ function createListingCard(item) {
   const img = document.createElement('img');
   img.src = getPrimaryImage(item);
   img.alt = item.title;
+  img.loading = 'lazy';
+  img.decoding = 'async';
 
   const favButton = document.createElement('button');
   favButton.type = 'button';
@@ -1875,6 +1974,7 @@ function openDetailDialog(item) {
     image.className = 'detail-image';
     image.src = source;
     image.alt = item.title;
+    image.loading = 'lazy';
     gallery.appendChild(image);
   });
   const content = document.createElement('div');
@@ -1932,6 +2032,21 @@ function openDetailDialog(item) {
     }));
     actions.append(edit, remove);
   } else {
+    const addToCart = document.createElement('button');
+    addToCart.type = 'button';
+    addToCart.className = 'btn btn-secondary';
+    addToCart.textContent = cart.has(item.id) ? 'Aus Warenkorb' : 'In den Warenkorb';
+    addToCart.addEventListener('click', () => {
+      if (cart.has(item.id)) {
+        cart.delete(item.id);
+        showNotice('Artikel aus dem Warenkorb entfernt.', 'success');
+      } else {
+        cart.set(item.id, { ...item, price: Number(item.price) });
+        showNotice(`${item.title} wurde zum Warenkorb hinzugefügt.`, 'success');
+      }
+      updateCartUi();
+    });
+    actions.appendChild(addToCart);
     const contact = document.createElement('button');
     contact.type = 'button';
     contact.className = 'btn btn-primary';
@@ -2228,7 +2343,44 @@ complaintDialog?.addEventListener('click', (event) => {
     closeComplaintDialog();
   }
 });
+cartDrawer?.addEventListener('click', (event) => {
+  if (event.target === cartDrawer) {
+    cartDrawer.hidden = true;
+  }
+});
 
+mobileMenuButton?.addEventListener('click', toggleMobileMenu);
+mobileNavCityFilter?.addEventListener('change', () => {
+  const value = mobileNavCityFilter.value;
+  if (navCityFilter) navCityFilter.value = value;
+  if (cityFilter) cityFilter.value = value;
+  renderListings();
+  setMobileMenu(false);
+});
+document.getElementById('mobileLoginButton')?.addEventListener('click', () => {
+  setMobileMenu(false);
+  openAuthDialog();
+});
+document.getElementById('mobileSellButton')?.addEventListener('click', () => {
+  setMobileMenu(false);
+  openAdForm();
+});
+cartButton?.addEventListener('click', () => {
+  if (!cartDrawer) return;
+  cartDrawer.hidden = !cartDrawer.hidden;
+  if (!cartDrawer.hidden) updateCartUi();
+});
+cartCheckoutButton?.addEventListener('click', () => {
+  if (!cart.size) {
+    showNotice('Dein Warenkorb ist leer.', 'error');
+    return;
+  }
+  showNotice('Checkout vorbereitet – bitte mit dem Verkäufer in Verbindung treten, um die Bestellung abzuschließen.', 'success');
+  cartDrawer.hidden = true;
+});
+document.querySelector('.cart-close')?.addEventListener('click', () => {
+  if (cartDrawer) cartDrawer.hidden = true;
+});
 loginButton.addEventListener('click', () => {
   if (currentUser) openAccountDialog();
   else openAuthDialog();
@@ -2394,4 +2546,5 @@ langButtons.forEach((button) => {
 
 applyLanguage(getCurrentLanguage());
 renderListings();
+updateCartUi();
 runBackendAction(initializeBackend);

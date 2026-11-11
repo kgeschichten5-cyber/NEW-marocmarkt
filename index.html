@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./style.css?v=4" />
-  </head><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
   <body>
     <header class="topbar">
       <div class="container topbar-inner">
@@ -87,10 +87,15 @@
         </nav>
 
         <div class="header-actions">
+          <button id="mobileMenuButton" class="mobile-menu-button" type="button" aria-expanded="false" aria-controls="mobileNavPanel" aria-label="Menü öffnen">☰</button>
           <div class="lang-switcher" aria-label="Choisir la langue">
             <button class="lang-btn active" type="button" data-lang="fr">FR</button>
             <button class="lang-btn" type="button" data-lang="ar">العربية</button>
           </div>
+          <button id="cartButton" class="btn btn-secondary cart-button" type="button" aria-label="Warenkorb">
+            <span aria-hidden="true">🛒</span>
+            <span id="cartButtonCount" class="cart-badge" hidden>0</span>
+          </button>
           <button id="loginButton" class="btn btn-secondary" type="button" data-i18n="loginButton">Anmelden</button>
           <button id="messageNotificationsButton" class="message-notifications" type="button" data-i18n-aria-label="messagesLabel" aria-label="Nachrichten" title="Nachrichten" hidden>
             <img src="./assets/message-notification-bell.png" alt="" />
@@ -101,10 +106,42 @@
           <button id="sellButton" class="btn btn-primary" type="button" data-i18n="sellButton">Anzeige aufgeben</button>
         </div>
       </div>
+      <div id="mobileNavPanel" class="mobile-nav-panel" hidden>
+        <div class="container mobile-nav-inner">
+          <div class="nav-select mobile-select">
+            <span data-i18n="topCities">Städte</span>
+            <select id="mobileNavCityFilter" aria-label="Städte auswählen">
+              <option value="" data-de="Alle Städte" data-fr="Toutes les villes" data-ar="كل المدن">Alle Städte</option>
+              <option value="Casablanca">Casablanca</option>
+              <option value="Rabat">Rabat</option>
+              <option value="Marrakesch">Marrakesch</option>
+              <option value="Tanger">Tanger</option>
+              <option value="Agadir">Agadir</option>
+              <option value="Fès">Fès</option>
+            </select>
+          </div>
+          <button id="mobileSellButton" class="btn btn-primary mobile-nav-action" type="button">Anzeige aufgeben</button>
+          <button id="mobileLoginButton" class="btn btn-secondary mobile-nav-action" type="button">Anmelden</button>
+        </div>
+      </div>
     </header>
 
     <main>
       <div id="appNotice" class="app-notice container" role="status" hidden></div>
+      <aside id="cartDrawer" class="cart-drawer" aria-live="polite" hidden>
+        <div class="cart-drawer-header">
+          <h3>Warenkorb</h3>
+          <button type="button" class="dialog-close cart-close" aria-label="Warenkorb schließen">×</button>
+        </div>
+        <div id="cartItems" class="cart-items"></div>
+        <div class="cart-summary">
+          <div class="cart-total-row">
+            <span>Gesamt</span>
+            <strong id="cartTotal">0 MAD</strong>
+          </div>
+          <button id="cartCheckoutButton" class="btn btn-primary cart-checkout-btn" type="button">Zur Kasse</button>
+        </div>
+      </aside>
       <section class="hero">
         <div class="container hero-inner">
           <div class="hero-copy">
