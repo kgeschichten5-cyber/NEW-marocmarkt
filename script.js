@@ -285,6 +285,12 @@ function getPrimaryImage(item) {
 const translations = {
   de: {
     languageLabel: 'Sprache wählen',
+    mobileNavigation: 'Mobile Navigation',
+    mobileSearch: 'Suche',
+    mobileFavorites: 'Favoriten',
+    mobileSell: 'Inserieren',
+    mobileMessages: 'Nachrichten',
+    mobileAccount: 'Meins',
     logoutButton: 'Abmelden',
     accountTitle: 'Mein Marocmarkt',
     myListings: 'Meine Anzeigen',
@@ -434,6 +440,12 @@ const translations = {
   },
   ar: {
     languageLabel: 'اختر اللغة',
+    mobileNavigation: 'التنقل',
+    mobileSearch: 'بحث',
+    mobileFavorites: 'المفضلة',
+    mobileSell: 'نشر إعلان',
+    mobileMessages: 'الرسائل',
+    mobileAccount: 'حسابي',
     logoutButton: 'تسجيل الخروج',
     accountTitle: 'حسابي في Marocmarkt',
     myListings: 'إعلاناتي',
@@ -583,6 +595,12 @@ const translations = {
   },
   fr: {
     languageLabel: 'Choisir la langue',
+    mobileNavigation: 'Navigation mobile',
+    mobileSearch: 'Recherche',
+    mobileFavorites: 'Favoris',
+    mobileSell: 'Publier',
+    mobileMessages: 'Messages',
+    mobileAccount: 'Mon compte',
     logoutButton: 'Se déconnecter',
     accountTitle: 'Mon Marocmarkt',
     myListings: 'Mes annonces',
