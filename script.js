@@ -123,6 +123,7 @@ const cartDrawer = document.getElementById('cartDrawer');
 const cartItems = document.getElementById('cartItems');
 const cartTotal = document.getElementById('cartTotal');
 const cartCheckoutButton = document.getElementById('cartCheckoutButton');
+const mobileBottomTabs = document.querySelectorAll('.mobile-bottom-tab');
 const categoryFilter = document.getElementById('categoryFilter');
 const sortSelect = document.getElementById('sortSelect');
 const minimumPriceInput = document.getElementById('minimumPriceInput');
@@ -2364,6 +2365,49 @@ document.getElementById('mobileLoginButton')?.addEventListener('click', () => {
 document.getElementById('mobileSellButton')?.addEventListener('click', () => {
   setMobileMenu(false);
   openAdForm();
+});
+mobileBottomTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const action = tab.dataset.mobileAction;
+    mobileBottomTabs.forEach((item) => item.classList.toggle('is-active', item === tab));
+
+    if (action === 'search') {
+      document.getElementById('searchInput')?.focus();
+      document.getElementById('searchInput')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    if (action === 'favorites') {
+      if (!currentUser) {
+        openAuthDialog();
+        return;
+      }
+      openAccountDialog('favorites');
+      return;
+    }
+
+    if (action === 'sell') {
+      openAdForm();
+      return;
+    }
+
+    if (action === 'messages') {
+      if (!currentUser) {
+        openAuthDialog();
+        return;
+      }
+      openAccountDialog('messages');
+      return;
+    }
+
+    if (action === 'account') {
+      if (currentUser) {
+        openAccountDialog();
+      } else {
+        openAuthDialog();
+      }
+    }
+  });
 });
 cartButton?.addEventListener('click', () => {
   if (!cartDrawer) return;
