@@ -399,45 +399,6 @@
       </div>
     </dialog>
 
-    <dialog id="adminLoginDialog" class="ad-dialog">
-      <div class="dialog-surface form-surface">
-        <div class="dialog-header">
-          <h3>Administrator-Zugang</h3>
-          <button type="button" class="dialog-close" id="closeAdminLoginButton" aria-label="Schließen">×</button>
-        </div>
-        <form id="adminLoginForm" class="form-grid single-column">
-          <label>
-            <span>E-Mail</span>
-            <input id="adminEmail" type="email" autocomplete="username" required />
-          </label>
-          <label>
-            <span>Passwort</span>
-            <input id="adminPassword" type="password" autocomplete="current-password" required />
-          </label>
-          <button class="btn btn-primary" type="submit">Sicher anmelden</button>
-        </form>
-        <section id="adminMfaPanel" class="admin-mfa-panel" hidden>
-          <p id="adminMfaInstructions"></p>
-          <img id="adminMfaQr" class="admin-mfa-qr" alt="QR-Code zur Einrichtung der Authenticator-App" hidden />
-          <form id="adminMfaForm" class="form-grid single-column">
-            <label>
-              <span>Authenticator-Code</span>
-              <input id="adminMfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required />
-            </label>
-            <button class="btn btn-primary" type="submit">Code bestätigen</button>
-          </form>
-          <form id="adminSetupForm" class="form-grid single-column" hidden>
-            <label>
-              <span>Einmaliger Ersteinrichtungs-Token</span>
-              <input id="adminSetupToken" type="password" autocomplete="off" required />
-            </label>
-            <button class="btn btn-primary" type="submit">Super-Admin einrichten</button>
-          </form>
-        </section>
-        <p id="adminLoginError" class="form-error" aria-live="polite"></p>
-      </div>
-    </dialog>
-
     <dialog id="adminDashboardDialog" class="listing-dialog admin-dashboard-dialog">
       <div class="dialog-surface">
         <button type="button" class="dialog-close" id="closeAdminDashboardButton" aria-label="Schließen">×</button>
@@ -697,7 +658,6 @@
           <strong>Mentions légales</strong>
           <span>Marocmarkt24@gmail.com</span>
         </div>
-        <button id="adminAccessButton" class="footer-admin-link" type="button">Admin-Zugang</button>
       </div>
     </footer>
 

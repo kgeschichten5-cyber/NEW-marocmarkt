@@ -158,15 +158,6 @@ const chatForm = document.getElementById('chatForm');
 const chatMessages = document.getElementById('chatMessages');
 const chatMessageInput = document.getElementById('chatMessageInput');
 const chatHeading = document.getElementById('chatHeading');
-const adminAccessButton = document.getElementById('adminAccessButton');
-const adminLoginDialog = document.getElementById('adminLoginDialog');
-const adminLoginForm = document.getElementById('adminLoginForm');
-const adminLoginError = document.getElementById('adminLoginError');
-const adminMfaPanel = document.getElementById('adminMfaPanel');
-const adminMfaInstructions = document.getElementById('adminMfaInstructions');
-const adminMfaQr = document.getElementById('adminMfaQr');
-const adminMfaForm = document.getElementById('adminMfaForm');
-const adminSetupForm = document.getElementById('adminSetupForm');
 const adminDashboardDialog = document.getElementById('adminDashboardDialog');
 const adminNotificationList = document.getElementById('adminNotificationList');
 const adminListingList = document.getElementById('adminListingList');
@@ -184,8 +175,6 @@ let activeConversation = null;
 let chatRefreshTimer = null;
 let notificationRefreshTimer = null;
 let accountTab = 'listings';
-let adminMfaFactorId = '';
-let adminMfaChallengeId = '';
 let adminRole = '';
 
 function getPrimaryImage(item) {
@@ -862,8 +851,6 @@ async function loadProfile(user) {
   if (!user || !supabaseClient) {
     adminRole = '';
     if (adminDashboardDialog?.open) adminDashboardDialog.close();
-    if (adminLoginDialog?.open) adminLoginDialog.close();
-    adminLoginForm?.reset();
     adminNotificationList?.replaceChildren();
     adminListingList?.replaceChildren();
     adminReportList?.replaceChildren();
@@ -896,7 +883,7 @@ async function initializeBackend() {
     updateAuthUi();
     showNotice(getLanguageDictionary().backendNotConfigured);
     document.querySelector('.moderation-section').hidden = true;
-    if (isAdminDashboardRoute) window.location.replace('/admin/');
+    if (isAdminDashboardRoute) window.location.replace('/admin/login/');
     return;
   }
 
@@ -924,12 +911,12 @@ async function initializeBackend() {
   }
   if (isAdminDashboardRoute) {
     if (!data.session) {
-      window.location.replace('/admin/');
+      window.location.replace('/admin/login/');
       return;
     }
     const { data: role, error: roleError } = await supabaseClient.rpc('get_platform_admin_role');
     if (roleError || !role) {
-      window.location.replace('/admin/');
+      window.location.replace('/admin/login/');
       return;
     }
     adminRole = role;
@@ -1277,69 +1264,6 @@ async function renderAccountContent() {
 async function renderComplaintList() {
   const moderationSection = document.querySelector('.moderation-section');
   if (moderationSection) moderationSection.hidden = true;
-}
-
-function showAdminError(error) {
-  if (adminLoginError) {
-    adminLoginError.textContent = error?.message || String(error);
-  }
-}
-
-async function beginAdminMfa() {
-  const { data, error } = await supabaseClient.auth.mfa.listFactors();
-  if (error) throw error;
-  adminLoginForm.hidden = true;
-  adminMfaPanel.hidden = false;
-  const verifiedTotp = (data.totp || []).find((factor) => factor.status === 'verified');
-  if (verifiedTotp) {
-    adminMfaFactorId = verifiedTotp.id;
-    adminMfaQr.hidden = true;
-    adminMfaInstructions.textContent = 'Gib den aktuellen Code aus deiner Authenticator-App ein.';
-  } else {
-    const { data: enrolled, error: enrollError } = await supabaseClient.auth.mfa.enroll({
-      factorType: 'totp',
-      friendlyName: 'Marocmarkt Administrator'
-    });
-    if (enrollError) throw enrollError;
-    adminMfaFactorId = enrolled.id;
-    adminMfaQr.src = enrolled.totp.qr_code;
-    adminMfaQr.hidden = false;
-    adminMfaInstructions.textContent = 'Scanne den QR-Code mit einer Authenticator-App und bestätige anschließend den generierten Code.';
-  }
-  const { data: challenge, error: challengeError } = await supabaseClient.auth.mfa.challenge({
-    factorId: adminMfaFactorId
-  });
-  if (challengeError) throw challengeError;
-  adminMfaChallengeId = challenge.id;
-}
-
-async function finishAdminMfa() {
-  const { error } = await supabaseClient.auth.mfa.verify({
-    factorId: adminMfaFactorId,
-    challengeId: adminMfaChallengeId,
-    code: document.getElementById('adminMfaCode').value.trim()
-  });
-  if (error) throw error;
-  document.getElementById('adminMfaCode').value = '';
-  adminMfaForm.hidden = true;
-  adminMfaInstructions.textContent = 'Mehr-Faktor-Authentifizierung bestätigt.';
-  const { data: role, error: roleError } = await supabaseClient.rpc('get_platform_admin_role');
-  if (roleError) throw roleError;
-  adminRole = role || '';
-  if (!adminRole) {
-    adminSetupForm.hidden = false;
-    adminMfaInstructions.textContent = 'Dieses Konto ist noch kein Administrator. Für die Ersteinrichtung benötigst du den einmaligen Token aus dem Supabase SQL Editor.';
-    return;
-  }
-  await openAdminDashboard();
-}
-
-async function openAdminDashboard() {
-  await renderAdminDashboard();
-  adminLoginDialog.close();
-  adminSetupForm.hidden = true;
-  adminLoginForm.reset();
-  adminDashboardDialog.showModal();
 }
 
 function createAdminActionButton(label, callback) {
@@ -2255,15 +2179,6 @@ document.querySelectorAll('.category-card').forEach((button) => {
 sellButton.addEventListener('click', () => openAdForm());
 messageNotificationsButton.addEventListener('click', () => openAccountDialog('messages'));
 complaintsButton?.addEventListener('click', () => openComplaintDialog());
-adminAccessButton?.addEventListener('click', () => {
-  window.location.assign('/admin/');
-});
-document.getElementById('closeAdminLoginButton')?.addEventListener('click', () => {
-  adminLoginForm.reset();
-  adminSetupForm.reset();
-  adminMfaForm.reset();
-  adminLoginDialog.close();
-});
 document.getElementById('closeAdminDashboardButton')?.addEventListener('click', () => adminDashboardDialog.close());
 document.getElementById('adminDashboardLogoutButton')?.addEventListener('click', async () => {
   const { error } = await supabaseClient.auth.signOut();
@@ -2272,69 +2187,7 @@ document.getElementById('adminDashboardLogoutButton')?.addEventListener('click',
     return;
   }
   adminRole = '';
-  window.location.replace('/admin/');
-});
-adminLoginForm?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  if (!supabaseClient) {
-    showAdminError(new Error(getLanguageDictionary().backendNotConfigured));
-    return;
-  }
-  const submitButton = adminLoginForm.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  adminLoginError.textContent = '';
-  try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: document.getElementById('adminEmail').value.trim(),
-      password: document.getElementById('adminPassword').value
-    });
-    if (error) throw error;
-    if (!data.session) throw new Error('Die Anmeldung wurde nicht abgeschlossen.');
-    document.getElementById('adminPassword').value = '';
-    await beginAdminMfa();
-  } catch (error) {
-    showAdminError(error);
-    if (!adminMfaPanel.hidden) {
-      adminLoginForm.hidden = false;
-      adminMfaPanel.hidden = true;
-      adminMfaForm.hidden = false;
-      adminSetupForm.hidden = true;
-    }
-  } finally {
-    submitButton.disabled = false;
-  }
-});
-adminMfaForm?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const submitButton = adminMfaForm.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  adminLoginError.textContent = '';
-  try {
-    await finishAdminMfa();
-  } catch (error) {
-    showAdminError(error);
-  } finally {
-    submitButton.disabled = false;
-  }
-});
-adminSetupForm?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const submitButton = adminSetupForm.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  adminLoginError.textContent = '';
-  try {
-    const { data, error } = await supabaseClient.rpc('bootstrap_super_admin', {
-      setup_token: document.getElementById('adminSetupToken').value.trim()
-    });
-    if (error) throw error;
-    adminRole = data;
-    document.getElementById('adminSetupToken').value = '';
-    await openAdminDashboard();
-  } catch (error) {
-    showAdminError(error);
-  } finally {
-    submitButton.disabled = false;
-  }
+  window.location.replace('/admin/login/');
 });
 document.getElementById('adminManagementForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();

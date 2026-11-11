@@ -1074,19 +1074,7 @@ h2 {
   gap: 6px;
 }
 
-.admin-mfa-panel {
-  display: grid;
-  gap: 14px;
-}
 
-.admin-mfa-qr {
-  width: min(240px, 100%);
-  margin: 0 auto;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: white;
-}
 
 .admin-dashboard-dialog {
   width: min(1000px, calc(100% - 24px));
@@ -1201,22 +1189,6 @@ h2 {
 
 .footer-imprint strong {
   color: var(--text);
-}
-
-.footer-admin-link {
-  margin-left: auto;
-  padding: 4px 0;
-  border: 0;
-  background: transparent;
-  color: var(--text-soft);
-  font-size: 0.8rem;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.footer-admin-link:hover,
-.footer-admin-link:focus-visible {
-  color: var(--primary-dark);
 }
 
 @media (max-width: 1024px) {
