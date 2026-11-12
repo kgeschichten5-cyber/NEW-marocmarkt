@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./style.css?v=5" />
+    <link rel="stylesheet" href="./style.css?v=7" />
   </head>
   <body>
     <header class="topbar">
@@ -150,6 +150,26 @@
             <p data-i18n="heroText">Von Autos und Wohnungen bis hin zu Technik, Möbeln und Jobs – Marocmarkt bringt Menschen in ganz Marokko zusammen.</p>
           </div>
 
+          <section class="service section-space">
+            <div class="container service-grid">
+              <div class="service-copy">
+                <span class="eyebrow" data-i18n="serviceEyebrow">Dienstleistungen</span>
+                <h2 data-i18n="serviceTitle">Professionelle Hilfe für Zuhause und Geschäft</h2>
+                <p data-i18n="serviceText">Von Reparaturen und Montage bis hin zu Reinigung, Transport und Beratung – finde schnell zuverlässige Experten in deiner Nähe.</p>
+                <ul class="service-features">
+                  <li data-i18n="servicePoint1">Reparatur & Montage</li>
+                  <li data-i18n="servicePoint2">Haus & Garten</li>
+                  <li data-i18n="servicePoint3">Transport & Lieferung</li>
+                </ul>
+                <a href="#categories" class="btn btn-primary" data-i18n="serviceButton">Mehr erfahren</a>
+              </div>
+
+              <div class="service-visual" aria-label="Illustration der Dienstleistungen">
+                <img src="./assets/dienstleistungen.png" alt="Dienstleistungen in Marokko" />
+              </div>
+            </div>
+          </section>
+
           <div class="search-shell" aria-label="Suche nach Anzeigen">
             <div class="search-grid">
               <label class="field field-large">
@@ -258,26 +278,6 @@
                 <input id="maximumPriceInput" type="number" min="0" step="1" inputmode="numeric" placeholder="Max." />
               </label>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="service section-space">
-        <div class="container service-grid">
-          <div class="service-copy">
-            <span class="eyebrow" data-i18n="serviceEyebrow">Dienstleistungen</span>
-            <h2 data-i18n="serviceTitle">Professionelle Hilfe für Zuhause und Geschäft</h2>
-            <p data-i18n="serviceText">Von Reparaturen und Montage bis hin zu Reinigung, Transport und Beratung – finde schnell zuverlässige Experten in deiner Nähe.</p>
-            <ul class="service-features">
-              <li data-i18n="servicePoint1">Reparatur & Montage</li>
-              <li data-i18n="servicePoint2">Haus & Garten</li>
-              <li data-i18n="servicePoint3">Transport & Lieferung</li>
-            </ul>
-            <a href="#categories" class="btn btn-primary" data-i18n="serviceButton">Mehr erfahren</a>
-          </div>
-
-          <div class="service-visual" aria-label="Illustration der Dienstleistungen">
-            <img src="./assets/dienstleistungen.png" alt="Dienstleistungen in Marokko" />
           </div>
         </div>
       </section>
@@ -723,6 +723,6 @@
 
     <script src="./supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./script.js?v=21"></script>
+    <script src="./script.js?v=23"></script>
   </body>
 </html>
