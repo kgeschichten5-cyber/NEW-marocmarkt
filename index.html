@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./style.css?v=7" />
+    <link rel="stylesheet" href="./style.css?v=8" />
   </head>
   <body>
     <header class="topbar">
@@ -437,51 +437,217 @@
     </dialog>
 
     <dialog id="adminDashboardDialog" class="listing-dialog admin-dashboard-dialog">
-      <div class="dialog-surface">
-        <button type="button" class="dialog-close" id="closeAdminDashboardButton" aria-label="Schließen">×</button>
-        <button type="button" id="adminDashboardLogoutButton" class="btn btn-secondary">Abmelden</button>
-        <h2>Super-Administrator</h2>
-        <p id="adminDashboardStatus" class="admin-dashboard-status" aria-live="polite"></p>
-        <section class="admin-dashboard-section">
-          <h3>Benachrichtigungen</h3>
-          <div id="adminNotificationList" class="admin-record-list"></div>
-        </section>
-        <section class="admin-dashboard-section">
-          <h3>Anzeigen</h3>
-          <div id="adminListingList" class="admin-record-list"></div>
-        </section>
-        <section class="admin-dashboard-section">
-          <h3>Beschwerden</h3>
-          <div id="adminReportList" class="admin-record-list"></div>
-        </section>
-        <section class="admin-dashboard-section">
-          <h3>Einsprüche</h3>
-          <div id="adminAppealList" class="admin-record-list"></div>
-        </section>
-        <section id="adminManagementSection" class="admin-dashboard-section" hidden>
-          <h3>Administratoren verwalten</h3>
-          <form id="adminManagementForm" class="admin-management-form">
-            <label>
-              <span>Benutzer-ID (UUID)</span>
-              <input id="managedAdminId" required />
-            </label>
-            <label>
-              <span>Rolle</span>
-              <select id="managedAdminRole">
-                <option value="admin">Administrator</option>
-                <option value="super_admin">Super-Administrator</option>
-                <option value="remove">Administrator entfernen</option>
-              </select>
-            </label>
-            <button class="btn btn-primary" type="submit">Rolle speichern</button>
-          </form>
-          <div id="adminRoster" class="admin-record-list"></div>
-        </section>
-        <section class="admin-dashboard-section">
-          <h3>Aktionsprotokoll</h3>
-          <div id="adminAuditList" class="admin-record-list"></div>
-        </section>
+      <div class="admin-dashboard-shell">
+        <aside class="admin-sidebar">
+          <a class="admin-brand" href="./" aria-label="Marocmarkt Startseite">
+            <img src="./assets/marocmarkt-logo.png" alt="" />
+            <span>MarocMarkt<small>ADMINISTRATION</small></span>
+          </a>
+          <nav class="admin-sidebar-nav" aria-label="Admin-Navigation">
+            <button type="button" class="is-active" data-admin-target="adminOverview"><span>◫</span>Übersicht</button>
+            <button type="button" data-admin-target="adminListingsSection"><span>▣</span>Anzeigen</button>
+            <button type="button" data-admin-target="adminOrdersSection"><span>▤</span>Bestellungen</button>
+            <button type="button" data-admin-target="adminUsersSection"><span>♙</span>Benutzer</button>
+            <button type="button" data-admin-target="adminReportsSection"><span>⚑</span>Beschwerden</button>
+            <button type="button" data-admin-target="adminAnalyticsSection"><span>▥</span>Statistiken</button>
+            <button type="button" data-admin-target="adminSettingsSection"><span>⚙</span>Einstellungen</button>
+          </nav>
+          <button type="button" class="admin-sidebar-logout" id="adminDashboardLogoutButton"><span>↪</span>Abmelden</button>
+        </aside>
+
+        <div class="admin-dashboard-main">
+          <header class="admin-dashboard-header">
+            <div class="admin-dashboard-heading">
+              <button type="button" class="admin-mobile-menu" aria-label="Admin-Navigation anzeigen">☰</button>
+              <div>
+                <h2>Dashboard</h2>
+                <p id="adminDashboardStatus" class="admin-dashboard-status" aria-live="polite"></p>
+              </div>
+            </div>
+            <div class="admin-profile">
+              <span class="admin-online-indicator"></span>
+              <span>Online</span>
+              <span class="admin-avatar" aria-hidden="true">♙</span>
+              <strong id="adminDashboardProfile">Administrator</strong>
+              <button type="button" id="closeAdminDashboardButton" aria-label="Dashboard schließen">×</button>
+            </div>
+          </header>
+
+          <main class="admin-dashboard-content" id="adminDashboardContent">
+            <section id="adminOverview" class="admin-stat-grid" aria-label="Kennzahlen">
+              <article class="admin-stat-card admin-stat-primary">
+                <span class="admin-stat-icon">▣</span>
+                <div><strong id="adminActiveListingCount">—</strong><span>Aktive Anzeigen</span></div>
+                <small>Aus der Datenbank</small>
+              </article>
+              <article class="admin-stat-card">
+                <span class="admin-stat-icon">▤</span>
+                <div><strong id="adminListingCount">—</strong><span>Anzeigen gesamt</span></div>
+                <small>Alle Status</small>
+              </article>
+              <article class="admin-stat-card admin-stat-alert">
+                <span class="admin-stat-icon">!</span>
+                <div><strong id="adminOpenReportCount">—</strong><span>Offene Beschwerden</span></div>
+                <small>Warten auf Prüfung</small>
+              </article>
+              <article class="admin-stat-card">
+                <span class="admin-stat-icon">♙</span>
+                <div><strong id="adminUserCount">—</strong><span>Registrierte Benutzer</span></div>
+                <small>Öffentliche Profile</small>
+              </article>
+            </section>
+
+            <div class="admin-dashboard-primary-grid">
+              <section id="adminListingsSection" class="admin-dashboard-section admin-panel">
+                <div class="admin-panel-heading">
+                  <div><span class="admin-panel-mark">▣</span><h3>Anzeigenverwaltung</h3></div>
+                  <span class="admin-live-tag">Live-Daten</span>
+                </div>
+                <div id="adminListingList" class="admin-record-list"></div>
+              </section>
+
+              <section id="adminReportsSection" class="admin-dashboard-section admin-panel">
+                <div class="admin-panel-heading">
+                  <div><span class="admin-panel-mark admin-panel-mark-alert">!</span><h3>Beschwerden</h3></div>
+                  <span class="admin-live-tag">Offen</span>
+                </div>
+                <div id="adminReportList" class="admin-record-list"></div>
+              </section>
+            </div>
+
+            <div class="admin-dashboard-secondary-grid">
+              <section id="adminAnalyticsSection" class="admin-dashboard-section admin-panel admin-analytics-panel">
+                <div class="admin-panel-heading">
+                  <div><span class="admin-panel-mark">▥</span><h3>Anzeigen-Aktivität</h3></div>
+                  <span class="admin-chart-caption">Letzte 14 Tage</span>
+                </div>
+                <p class="admin-data-note">Veröffentlichte Anzeigen pro Tag. Verkäufe werden nicht erfasst, da keine Bestellungsdatenbank eingerichtet ist.</p>
+                <div id="adminSalesChart" class="admin-sales-chart" role="img" aria-label="Anzeigen pro Tag der letzten 14 Tage"></div>
+              </section>
+
+              <section class="admin-dashboard-section admin-panel admin-quick-actions">
+                <div class="admin-panel-heading">
+                  <div><span class="admin-panel-mark">↯</span><h3>Schnellzugriff</h3></div>
+                </div>
+                <div class="admin-quick-action-list">
+                  <button type="button" data-admin-target="adminListingsSection">Anzeigen prüfen <span>→</span></button>
+                  <button type="button" data-admin-target="adminUsersSection">Benutzer verwalten <span>→</span></button>
+                  <button type="button" data-admin-target="adminOrdersSection">Bestellungsstatus <span>→</span></button>
+                </div>
+              </section>
+            </div>
+
+            <div class="admin-dashboard-secondary-grid admin-dashboard-extra-grid">
+              <section id="adminOrdersSection" class="admin-dashboard-section admin-panel">
+                <div class="admin-panel-heading">
+                  <div><span class="admin-panel-mark">▤</span><h3>Bestellungen</h3></div>
+                  <span class="admin-live-tag admin-live-tag-muted">Nicht eingerichtet</span>
+                </div>
+                <p class="admin-empty-note">In der verbundenen Datenbank gibt es keine Bestellungs-Tabelle. Hier werden deshalb keine Beispielbestellungen angezeigt. Für eine Bestellverwaltung muss zuerst ein Bestellungsmodell eingerichtet werden.</p>
+              </section>
+
+              <section id="adminUsersSection" class="admin-dashboard-section admin-panel">
+                <div class="admin-panel-heading">
+                  <div><span class="admin-panel-mark">♙</span><h3>Benutzer verwalten</h3></div>
+                  <span class="admin-live-tag">MFA-geschützt</span>
+                </div>
+                <form id="adminUserSearchForm" class="admin-user-search">
+                  <label for="adminUserSearch">Profil nach Name suchen</label>
+                  <div class="admin-user-search-row">
+                    <input id="adminUserSearch" type="search" required minlength="2" maxlength="80" placeholder="Name eingeben" />
+                    <button class="btn btn-secondary" type="submit">Suchen</button>
+                  </div>
+                  <div id="adminUserSearchResults" class="admin-user-search-results" aria-live="polite"></div>
+                </form>
+                <form id="adminUserManagementForm" class="admin-user-form">
+                  <label for="adminTargetUserId">Benutzer-ID (UUID)</label>
+                  <input id="adminTargetUserId" required autocomplete="off" placeholder="Benutzer-UUID" />
+                  <label for="adminUserAction">Maßnahme</label>
+                  <select id="adminUserAction">
+                    <option value="warning">Verwarnen</option>
+                    <option value="suspend">24 Stunden sperren</option>
+                    <option value="ban">Dauerhaft sperren</option>
+                    <option value="unsuspend">Sperre aufheben</option>
+                  </select>
+                  <label for="adminUserReason">Begründung</label>
+                  <textarea id="adminUserReason" rows="3" minlength="5" maxlength="1000" required></textarea>
+                  <button class="btn btn-primary" type="submit">Maßnahme ausführen</button>
+                </form>
+              </section>
+            </div>
+
+            <div class="admin-dashboard-secondary-grid admin-dashboard-extra-grid">
+              <section class="admin-dashboard-section admin-panel">
+                <div class="admin-panel-heading">
+                  <div><span class="admin-panel-mark">◉</span><h3>Benachrichtigungen</h3></div>
+                </div>
+                <div id="adminNotificationList" class="admin-record-list"></div>
+              </section>
+              <section class="admin-dashboard-section admin-panel">
+                <div class="admin-panel-heading">
+                  <div><span class="admin-panel-mark">⚑</span><h3>Einsprüche</h3></div>
+                </div>
+                <div id="adminAppealList" class="admin-record-list"></div>
+              </section>
+            </div>
+
+            <section id="adminSettingsSection" class="admin-dashboard-section admin-panel">
+              <div class="admin-panel-heading">
+                <div><span class="admin-panel-mark">⚙</span><h3>Admin-Einstellungen &amp; Rollen</h3></div>
+                <span class="admin-live-tag">Serverseitig geprüft</span>
+              </div>
+              <div id="adminManagementSection" hidden>
+                <form id="adminManagementForm" class="admin-management-form">
+                  <label>
+                    <span>Benutzer-ID (UUID)</span>
+                    <input id="managedAdminId" required />
+                  </label>
+                  <label>
+                    <span>Rolle</span>
+                    <select id="managedAdminRole">
+                      <option value="admin">Administrator</option>
+                      <option value="super_admin">Super-Administrator</option>
+                      <option value="remove">Administrator entfernen</option>
+                    </select>
+                  </label>
+                  <button class="btn btn-primary" type="submit">Rolle speichern</button>
+                </form>
+                <div id="adminRoster" class="admin-record-list"></div>
+              </div>
+              <p id="adminSettingsHelp" class="admin-empty-note">Rollenverwaltung ist nur für Super-Administratoren verfügbar.</p>
+              <details class="admin-audit-details">
+                <summary>Aktionsprotokoll anzeigen</summary>
+                <div id="adminAuditList" class="admin-record-list"></div>
+              </details>
+            </section>
+          </main>
+        </div>
       </div>
+      <dialog id="adminListingEditDialog" class="admin-listing-edit-dialog">
+        <form id="adminListingEditForm" class="admin-listing-edit-form">
+          <button type="button" class="dialog-close" id="adminListingEditClose" aria-label="Schließen">×</button>
+          <h2>Anzeige bearbeiten</h2>
+          <input id="adminEditListingId" type="hidden" />
+          <label for="adminEditListingTitle">Titel</label>
+          <input id="adminEditListingTitle" required minlength="3" maxlength="120" />
+          <label for="adminEditListingPrice">Preis (MAD)</label>
+          <input id="adminEditListingPrice" type="number" min="1" step="0.01" required />
+          <label for="adminEditListingCategory">Kategorie</label>
+          <select id="adminEditListingCategory" required>
+            <option>Autos</option><option>Immobilien</option><option>Elektronik</option><option>Möbel</option><option>Mode</option><option>Jobs</option><option>Freizeit</option><option>Haustiere</option><option>Haus &amp; Garten</option>
+          </select>
+          <label for="adminEditListingCity">Stadt</label>
+          <input id="adminEditListingCity" required maxlength="120" />
+          <label for="adminEditListingDescription">Beschreibung</label>
+          <textarea id="adminEditListingDescription" required minlength="20" maxlength="5000" rows="5"></textarea>
+          <label for="adminEditListingReason">Änderungsgrund (mind. 5 Zeichen)</label>
+          <textarea id="adminEditListingReason" required minlength="5" maxlength="1000" rows="2"></textarea>
+          <div class="dialog-actions">
+            <button type="button" class="btn btn-secondary" id="adminListingEditCancel">Abbrechen</button>
+            <button type="submit" class="btn btn-primary">Änderungen speichern</button>
+          </div>
+        </form>
+      </dialog>
     </dialog>
 
     <dialog id="accountDialog" class="listing-dialog account-dialog">
@@ -723,6 +889,6 @@
 
     <script src="./supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./script.js?v=23"></script>
+    <script src="./script.js?v=26"></script>
   </body>
 </html>

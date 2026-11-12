@@ -176,6 +176,8 @@ const adminAppealList = document.getElementById('adminAppealList');
 const adminAuditList = document.getElementById('adminAuditList');
 const adminManagementSection = document.getElementById('adminManagementSection');
 const adminRoster = document.getElementById('adminRoster');
+const adminListingEditDialog = document.getElementById('adminListingEditDialog');
+const adminListingEditForm = document.getElementById('adminListingEditForm');
 let currentUser = null;
 let currentProfile = null;
 const cart = new Map();
@@ -993,13 +995,27 @@ async function loadProfile(user) {
   refreshUnreadMessageCount();
 }
 
+function getSiteBasePath() {
+  const pathname = window.location.pathname;
+  const adminPathIndex = pathname.indexOf('/admin/');
+  if (adminPathIndex !== -1) {
+    return pathname.slice(0, adminPathIndex + 1);
+  }
+  const sitePath = pathname.replace(/index\.html$/, '');
+  return sitePath.endsWith('/') ? sitePath : `${sitePath}/`;
+}
+
+function getAdminLoginPath() {
+  return `${getSiteBasePath()}admin/`;
+}
+
 async function initializeBackend() {
   const isAdminDashboardRoute = new URLSearchParams(window.location.search).get('admin') === '1';
   if (!supabaseClient) {
     updateAuthUi();
     showNotice(getLanguageDictionary().backendNotConfigured);
     document.querySelector('.moderation-section').hidden = true;
-    if (isAdminDashboardRoute) window.location.replace('/admin/login/');
+    if (isAdminDashboardRoute) window.location.replace(getAdminLoginPath());
     return;
   }
 
@@ -1027,12 +1043,12 @@ async function initializeBackend() {
   }
   if (isAdminDashboardRoute) {
     if (!data.session) {
-      window.location.replace('/admin/login/');
+      window.location.replace(getAdminLoginPath());
       return;
     }
     const { data: role, error: roleError } = await supabaseClient.rpc('get_platform_admin_role');
     if (roleError || !role) {
-      window.location.replace('/admin/login/');
+      window.location.replace(getAdminLoginPath());
       return;
     }
     adminRole = role;
@@ -1396,6 +1412,8 @@ async function renderAdminDashboard() {
   const status = document.getElementById('adminDashboardStatus');
   status.textContent = `Angemeldet als ${adminRole === 'super_admin' ? 'Super-Administrator' : 'Administrator'} · MFA aktiv`;
   adminManagementSection.hidden = adminRole !== 'super_admin';
+  document.getElementById('adminSettingsHelp').hidden = adminRole === 'super_admin';
+  document.getElementById('adminDashboardProfile').textContent = currentUser?.email || 'Administrator';
 
   const rows = [];
   for (let offset = 0; ; offset += 500) {
@@ -1419,16 +1437,57 @@ async function renderAdminDashboard() {
     price: Number(row.price),
     category: row.category,
     description: row.description,
+    date: row.created_at,
     imagePaths: row.image_paths || [],
     images: (row.image_paths || []).map(publicImageUrl),
     image: (row.image_paths || []).map(publicImageUrl)[0] || './assets/placeholder.svg'
   }));
+  document.getElementById('adminListingCount').textContent = String(adminListings.length);
+  document.getElementById('adminActiveListingCount').textContent = String(adminListings.filter((listing) => listing.status === 'active').length);
+  renderAdminListingActivity(adminListings);
+  const { count: userCount, error: userCountError } = await supabaseClient
+    .from('public_profiles')
+    .select('id', { count: 'exact', head: true });
+  if (userCountError) throw userCountError;
+  document.getElementById('adminUserCount').textContent = String(userCount ?? 0);
   await renderAdminNotifications();
   renderAdminListings(adminListings);
   await renderAdminReports(adminListings);
   await renderAdminAppeals(adminListings);
   await renderAdminAudit();
   if (adminRole === 'super_admin') await renderAdminRoster();
+}
+
+function renderAdminListingActivity(adminListings) {
+  const chart = document.getElementById('adminSalesChart');
+  const today = new Date();
+  const days = Array.from({ length: 14 }, (_, index) => {
+    const date = new Date(today);
+    date.setUTCDate(today.getUTCDate() - (13 - index));
+    const key = date.toISOString().slice(0, 10);
+    return { key, label: `${key.slice(8, 10)}.${key.slice(5, 7)}`, count: 0 };
+  });
+  const counts = new Map(days.map((day) => [day.key, day]));
+  adminListings.forEach((listing) => {
+    const day = counts.get(listing.date?.slice(0, 10));
+    if (day) day.count += 1;
+  });
+  const maximum = Math.max(1, ...days.map((day) => day.count));
+  chart.replaceChildren(...days.map((day) => {
+    const column = document.createElement('div');
+    column.className = 'admin-chart-column';
+    const value = document.createElement('span');
+    value.className = 'admin-chart-value';
+    value.textContent = String(day.count);
+    const bar = document.createElement('span');
+    bar.className = 'admin-chart-bar';
+    bar.style.height = `${Math.max(4, (day.count / maximum) * 100)}%`;
+    const label = document.createElement('small');
+    label.textContent = day.label;
+    column.title = `${day.key}: ${day.count} Anzeigen`;
+    column.append(value, bar, label);
+    return column;
+  }));
 }
 
 async function renderAdminNotifications() {
@@ -1485,11 +1544,21 @@ function renderAdminListings(adminListings) {
     actions.appendChild(createAdminActionButton('Prüfen', async () => {
       openDetailDialog(listing);
     }));
+    actions.appendChild(createAdminActionButton('Bearbeiten', async () => {
+      document.getElementById('adminEditListingId').value = listing.id;
+      document.getElementById('adminEditListingTitle').value = listing.title;
+      document.getElementById('adminEditListingPrice').value = String(listing.price);
+      document.getElementById('adminEditListingCategory').value = listing.category;
+      document.getElementById('adminEditListingCity').value = listing.city;
+      document.getElementById('adminEditListingDescription').value = listing.description;
+      document.getElementById('adminEditListingReason').value = '';
+      adminListingEditDialog.showModal();
+    }));
     const transitions = listing.status === 'removed'
       ? [['active', 'Wiederherstellen']]
       : listing.status === 'paused'
-        ? [['active', 'Freischalten'], ['removed', 'Endgültig entfernen']]
-        : [['paused', 'Deaktivieren'], ['removed', 'Endgültig entfernen']];
+        ? [['active', 'Freischalten'], ['removed', 'Archivieren']]
+        : [['paused', 'Deaktivieren'], ['removed', 'Archivieren']];
     transitions.forEach(([newStatus, label]) => {
       actions.appendChild(createAdminActionButton(label, async () => {
         const reason = window.prompt('Begründung (mindestens 5 Zeichen):');
@@ -1524,6 +1593,7 @@ async function renderAdminReports(adminListings) {
     if (!page || page.length < 500) break;
   }
   adminReportList.replaceChildren();
+  document.getElementById('adminOpenReportCount').textContent = String(reports.length);
   if (!reports?.length) {
     adminReportList.textContent = 'Keine offenen Beschwerden.';
     return;
@@ -2314,6 +2384,20 @@ sellButton.addEventListener('click', () => openAdForm());
 messageNotificationsButton.addEventListener('click', () => openAccountDialog('messages'));
 complaintsButton?.addEventListener('click', () => openComplaintDialog());
 document.getElementById('closeAdminDashboardButton')?.addEventListener('click', () => adminDashboardDialog.close());
+document.querySelectorAll('[data-admin-target]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const target = document.getElementById(button.dataset.adminTarget);
+    if (!target) return;
+    document.querySelectorAll('.admin-sidebar-nav [data-admin-target]').forEach((navButton) => {
+      navButton.classList.toggle('is-active', navButton.dataset.adminTarget === button.dataset.adminTarget);
+    });
+    document.querySelector('.admin-sidebar-nav')?.classList.remove('is-open');
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+document.querySelector('.admin-mobile-menu')?.addEventListener('click', () => {
+  document.querySelector('.admin-sidebar-nav')?.classList.toggle('is-open');
+});
 document.getElementById('adminDashboardLogoutButton')?.addEventListener('click', async () => {
   const { error } = await supabaseClient.auth.signOut();
   if (error) {
@@ -2321,7 +2405,7 @@ document.getElementById('adminDashboardLogoutButton')?.addEventListener('click',
     return;
   }
   adminRole = '';
-  window.location.replace('/admin/login/');
+  window.location.replace(getAdminLoginPath());
 });
 document.getElementById('adminManagementForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -2338,6 +2422,79 @@ document.getElementById('adminManagementForm')?.addEventListener('submit', async
   }
   document.getElementById('adminManagementForm').reset();
   await runBackendAction(renderAdminDashboard);
+});
+document.getElementById('adminUserSearchForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  await runBackendAction(async () => {
+    const searchTerm = document.getElementById('adminUserSearch').value.trim();
+    const { data, error } = await supabaseClient
+      .from('public_profiles')
+      .select('id, display_name')
+      .ilike('display_name', `%${searchTerm}%`)
+      .order('display_name')
+      .limit(10);
+    if (error) throw error;
+    const results = document.getElementById('adminUserSearchResults');
+    results.replaceChildren();
+    if (!data?.length) {
+      results.textContent = 'Keine passenden Profile gefunden.';
+      return;
+    }
+    data.forEach((profile) => {
+      const row = document.createElement('div');
+      row.className = 'admin-user-search-result';
+      const identity = document.createElement('span');
+      identity.textContent = `${profile.display_name || 'Ohne Namen'} · ${profile.id}`;
+      const select = document.createElement('button');
+      select.type = 'button';
+      select.className = 'btn btn-secondary small-btn';
+      select.textContent = 'Auswählen';
+      select.addEventListener('click', () => {
+        document.getElementById('adminTargetUserId').value = profile.id;
+        document.getElementById('adminTargetUserId').focus();
+      });
+      row.append(identity, select);
+      results.appendChild(row);
+    });
+  });
+});
+document.getElementById('adminUserManagementForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const action = document.getElementById('adminUserAction').value;
+  await runBackendAction(async () => {
+    const { error } = await supabaseClient.rpc('admin_moderate_user', {
+      target_user: document.getElementById('adminTargetUserId').value.trim(),
+      moderation_action: action,
+      action_reason: document.getElementById('adminUserReason').value.trim(),
+      duration_hours: action === 'suspend' ? 24 : null
+    });
+    if (error) throw error;
+    document.getElementById('adminUserManagementForm').reset();
+    showNotice('Die Benutzermaßnahme wurde ausgeführt.', 'success');
+    await renderAdminDashboard();
+  });
+});
+const closeAdminListingEdit = () => adminListingEditDialog?.close();
+document.getElementById('adminListingEditClose')?.addEventListener('click', closeAdminListingEdit);
+document.getElementById('adminListingEditCancel')?.addEventListener('click', closeAdminListingEdit);
+adminListingEditForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  await runBackendAction(async () => {
+    const { error } = await supabaseClient.rpc('admin_update_listing', {
+      target_listing: document.getElementById('adminEditListingId').value,
+      new_title: document.getElementById('adminEditListingTitle').value.trim(),
+      new_price: Number(document.getElementById('adminEditListingPrice').value),
+      new_category: document.getElementById('adminEditListingCategory').value,
+      new_city: document.getElementById('adminEditListingCity').value.trim(),
+      new_description: document.getElementById('adminEditListingDescription').value.trim(),
+      action_reason: document.getElementById('adminEditListingReason').value.trim()
+    });
+    if (error) throw error;
+    adminListingEditDialog.close();
+    showNotice('Die Anzeige wurde aktualisiert.', 'success');
+    await loadListings();
+    await renderAdminDashboard();
+  });
 });
 complaintCloseButton?.addEventListener('click', closeComplaintDialog);
 cancelComplaintButton?.addEventListener('click', closeComplaintDialog);
